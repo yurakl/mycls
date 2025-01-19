@@ -1,0 +1,7 @@
+*.txt
+*.log
+*.exe
+*.o
+*.a
+*tmp*
+*test*
