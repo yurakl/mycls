@@ -37,10 +37,10 @@ void processAllRequests(std::string& request, std::vector<std::string>& answer_q
         std::string a_request = request.substr(body_start, body_length);
         std::cerr << "Single request:\n" << a_request << "\n!!!!!" << std::endl;
 
-        // Додаємо пакет до черги пакетів
+        //~ Додаємо пакет до черги пакетів
         request_queque.push_back(std::move(a_request));
 
-        // Видаляємо початок - знайдений пакет
+        //~ Видаляємо початок - знайдений пакет
         request = request.substr(body_start + body_length);
     }
 
@@ -63,15 +63,13 @@ void processAllRequests(std::string& request, std::vector<std::string>& answer_q
 int processLSPRequest(const std::string& request, std::string& answer)
 { 
     try {
-        // Парсимо JSON запит
+        //~ Парсимо JSON запит
         json j = json::parse(request); 
         std::cerr << "processLSPRequest: " << j["method"] << std::endl;;
-        // Перевіряємо, чи є необхідні поля
+         
         if (j.contains("jsonrpc") && j.contains("method")) {
             std::string method = j["method"];
-
-            // Виводимо повідомлення на основі методу запиту
-            
+ 
             if (method == "textDocument/didOpen") {
                 std::cerr << "didOpen" << std::endl;
                 onDidOpen(j, answer);
@@ -82,7 +80,7 @@ int processLSPRequest(const std::string& request, std::string& answer)
             }
             else if (method == "textDocument/didChange") {
                 std::cerr << "didChange" << std::endl;
-                //onDidChange(j);
+                onDidChange(j);
             }
             else if (method == "textDocument/documentSymbol") {
                 std::cerr << "documentSymbol" << std::endl;
@@ -106,12 +104,13 @@ int processLSPRequest(const std::string& request, std::string& answer)
             return -1;
         }
     }
-    catch (const std::exception& e) { 
+    catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
         answer = "Error processing request: " + static_cast<std::string>(e.what());
     }
     return 0;
 }
-
+ 
 void handleInitialize(const json& j,  std::string& answer) {
     std::cerr << "handleInitialize" << std::endl;
     std::string rootUri     = j["params"]["rootUri"]; 
@@ -131,7 +130,7 @@ void handleInitialize(const json& j,  std::string& answer) {
     // if (rootUri.end_with(".c"))
     LanguageData.keywords   = data.at("languages").at("C++").at("keywords").get<std::vector<std::string>>();
     LanguageData.constructs = data.at("languages").at("C++").at("constructs").get<std::vector<std::string>>();
-
+    LanguageData.types      = data.at("languages").at("C++").at("built-in types").get<std::vector<std::string>>();
     std::cerr << "Read Language Data Done" << std::endl;
 
     json response;
@@ -157,28 +156,16 @@ void handleInitialize(const json& j,  std::string& answer) {
 void onDidOpen(const json& j, std::string& answer)
 {
     
-    std::string fname = j["params"]["textDocument"]["uri"];
-    fname = fname.substr(8);
-    std::cerr << "About to map file: " << fname << std::endl;
-
-    HANDLE  file_handle     = CreateFileA(fname.c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    HANDLE  mapping_handle  = CreateFileMappingA(file_handle, NULL, PAGE_READONLY | SEC_COMMIT, 0, 0, NULL);
-    char *  mapping         = (char *) MapViewOfFile(mapping_handle, FILE_MAP_READ,  0, 0, 0);
-
-    if (mapping == NULL)
-    {
-        std::cerr << "Cant map file" << fname << std::endl;
-        return;
-    }
+    std::string path    = j["params"]["textDocument"]["uri"];
+    std::string fname   = path.substr(8);
  
     project->files.emplace(fname, ProjectFile{fname, "text"});
   
     auto it = project->files.find(fname);
-
-    it->second.map_info.file_handle      = file_handle;
-    it->second.map_info.mapping_handle   = mapping_handle;
-    it->second.map_info.mapping          = mapping;
-
+    it->second.path = path;
+    
+    it->second.text = j["params"]["textDocument"]["text"];
+ 
     std::cerr << "File is added to project: " << fname << std::endl;
 }
 
@@ -191,12 +178,6 @@ void onDidClose(const json& j, std::string& answer)
 
     if (it->second.included <= 0)
     {
-        UnmapViewOfFile(it->second.map_info.mapping);
-
-        CloseHandle(it->second.map_info.mapping_handle);
-
-        CloseHandle(it->second.map_info.file_handle);
-
         project->files.erase(it);
     }
 }
@@ -208,16 +189,131 @@ void onDocumentSymbol(const json& j, std::string& answer) {
 
     auto it = project->files.find(fname.substr(8));
         
-    std::cout << *it.first << std::endl;
-    //std::string_view view(it->second.map_info.mapping);
-    /*
-    while (view.find("class") != std::string::npos)
+     
+    //~ Регулярні вирази для пошуку класів, структур і функцій
+    std::regex classRegex(R"(\bclass\s+(\w+)\s*)");
+    //~ std::regex structRegex(R"(\bstruct\s+(\w+)\s*{)");
+    std::regex functionRegex(R"(\b(\w[\w\s*&]+)\s+(\w+)\s*\(([^)]*)\)\s*)");
+ 
+    std::string::const_iterator begin {it->second.text.begin()};
+    std::string::const_iterator end   {it->second.text.end()};
+    
+    std::vector <struct Symbol> symbolList;
+    
+    try {
+        symbolSearch(begin, begin, end, classRegex, SymbolKind::Class, symbolList);
+        symbolSearch(begin, begin, end, functionRegex, SymbolKind::Class, symbolList);
+    } catch (std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }
+    
+    json response;
+    response["jsonrpc"] = "2.0";
+    response["id"] = j["id"];  
+    json symbs;
+
+    for (const auto& sym : symbolList)
     {
         
+        symbs +=   {
+                            {"name", sym.name},
+                            {"detail", ""},
+                            {"kind", SymbolKind::Class},
+                            {"range",
+                                    {
+                                        {"start",
+                                            {   {"line", sym.startLine},  {"character", 0}    }
+                                        },
+                                        {"end",
+                                            {   {"line", sym.endLine},  {"character", 0}    }
+                                        }
+                                    }
+                            }
+                    };
+
     }
-    */
+    response["result"] = std::move(symbs);
+   
+    std::cerr << "onDocumentSymbol Handler End" << std::endl;
+    answer = response.dump(); 
+    return ;
 
 }
 
 
+void onDidChange(const json& j)
+{
+    std::string fname = j["params"]["textDocument"]["uri"];
+    auto it = project->files.find(fname.substr(8));
+    
+    it->second.text = j["params"]["contentChanges"][0]["text"];
 
+    return;
+}
+
+void symbolSearch(const std::string::const_iterator& start,
+                    std::string::const_iterator begin,
+                        std::string::const_iterator end,
+                            std::regex& regex,
+                                SymbolKind kind,
+                                    std::vector <struct Symbol>& symbolList)
+{
+    std::smatch match;
+    while (std::regex_search(begin, end, match, regex))
+    { 
+                begin = match[0].second; 
+                int sline = 0, eline = 0;
+                for (auto it = start; it != match[0].first; ++it)
+                 {
+                     if (*it == '\n')
+                     {
+                        sline++;
+                     }
+                 }
+                 
+                 eline = sline;
+                 for (auto it = match[0].first; it != match[0].second; ++it)
+                 {
+                     if (*it == '\n')
+                     {
+                        eline++;
+                     }
+                 }
+                 try {
+                    auto endBlock =  extractBlock(begin, end);
+                    begin = endBlock;
+                } catch (const std::exception& e) {
+                    std::cerr << "Exception caught: " << e.what() << ". Continuing...\n";
+                    continue; 
+                } 
+                struct Symbol temprorary = {static_cast<std::string>(match[0]), kind, sline, eline};
+                symbolList.push_back(temprorary);
+                 
+    } 
+}
+
+std::string::const_iterator extractBlock(const std::string::const_iterator begin, const std::string::const_iterator end)
+{ 
+    auto openPos = std::find(begin, end, '{'); 
+    if (openPos == end) {
+        throw std::runtime_error("Відкриваючу дужку не знайдено!");
+    }
+    auto current = openPos;
+    int bracketCount = 1;
+
+    while (bracketCount > 0 && current != end) {
+        ++current;
+        if (current == end) break;  
+        if (*current == '{') {
+            ++bracketCount;
+        } else if (*current == '}') {
+            --bracketCount;
+        }
+    }
+
+    if (bracketCount != 0) {
+        throw std::runtime_error("Відповідну закриваючу дужку не знайдено!");
+    }
+ 
+    return current;
+}                        

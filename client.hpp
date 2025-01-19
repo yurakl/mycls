@@ -11,12 +11,10 @@ public:
     std::string path;
     std::string type;
     int included {0};
-
-    struct map_info {
-        HANDLE file_handle      {NULL};
-        HANDLE mapping_handle   {NULL};
-        char * mapping          {NULL};
-    } map_info;
+    
+    std::ifstream fd;
+    std::string   text;
+    
     ProjectFile(const std::string& path, const std::string& type)
         : path(path), type(type) {}
 };
@@ -36,5 +34,6 @@ public:
 struct LanguageData {
     std::vector<std::string> keywords;
     std::vector<std::string> constructs;
+    std::vector<std::string> types;
     std::vector<std::string> custom;
 };

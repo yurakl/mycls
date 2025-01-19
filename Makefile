@@ -1,4 +1,4 @@
-default: mycls.exe test.exe
+default: mycls.exe 
 
 mycls.exe: mycls.cpp processLSPrequest.cpp
 	g++ -std=c++20 -g .\mycls.cpp .\processLSPrequest.cpp -o .\mycls.exe

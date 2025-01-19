@@ -8,14 +8,13 @@
 #include <string_view>
 #include <windows.h>
 #include <winbase.h>
-
-
+#include <regex>  
 using json = nlohmann::json;
 
 void processAllRequests(std::string& request, std::vector<std::string>& answer_queque);
 int  processLSPRequest(const std::string& request, std::string& answer);
 void handleInitialize(const json& j, std::string& answer);
-void onDidChange(const json& j, std::string& answer);
+void onDidChange(const json& j);
 void onDidOpen(const json& j, std::string& answer);
 void onDidClose(const json& j, std::string& answer);
 void onDocumentSymbol(const json& j, std::string& answer);
@@ -59,3 +58,12 @@ struct Symbol {
     //~ List of nested symbols
     std::vector<Symbol> children; 
 };
+
+void symbolSearch(const std::string::const_iterator& start,
+                    std::string::const_iterator begin,
+                        std::string::const_iterator end,
+                            std::regex& regex,
+                                SymbolKind kind,
+                                    std::vector <struct Symbol>& symbolList);
+
+std::string::const_iterator extractBlock(const std::string::const_iterator begin, const std::string::const_iterator end);
