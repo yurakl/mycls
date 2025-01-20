@@ -193,19 +193,19 @@ void onDocumentSymbol(const json& j, std::string& answer) {
     //~ Регулярні вирази для пошуку класів, структур і функцій
     std::regex classRegex(R"(\bclass\s+(\w+)\s*)");
     //~ std::regex structRegex(R"(\bstruct\s+(\w+)\s*{)");
-    std::regex functionRegex(R"(\b(\w[\w\s*&]+)\s+(\w+)\s*\(([^)]*)\)\s*)");
+    std::regex functionRegex(R"((\w[\w\s*&]+)\s+(\w+)\s*\(([^)]*)\)\s*)");
  
     std::string::const_iterator begin {it->second.text.begin()};
     std::string::const_iterator end   {it->second.text.end()};
     
     std::vector <struct Symbol> symbolList;
-    
-    try {
-        symbolSearch(begin, begin, end, classRegex, SymbolKind::Class, symbolList);
-        symbolSearch(begin, begin, end, functionRegex, SymbolKind::Class, symbolList);
-    } catch (std::exception& e) {
-        std::cerr << "Error: " << e.what() << std::endl;
+
+
+    for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
+    {
+        symbolSearch(begin, begin, end, sym_it.second.regex, sym_it.second.first, symbolList);
     }
+     
     
     json response;
     response["jsonrpc"] = "2.0";
@@ -217,7 +217,7 @@ void onDocumentSymbol(const json& j, std::string& answer) {
         
         symbs +=   {
                             {"name", sym.name},
-                            {"detail", ""},
+                            {"detail", sym.detail},
                             {"kind", SymbolKind::Class},
                             {"range",
                                     {
@@ -261,7 +261,17 @@ void symbolSearch(const std::string::const_iterator& start,
     std::smatch match;
     while (std::regex_search(begin, end, match, regex))
     { 
-                begin = match[0].second; 
+                begin = match[0].second;
+                //~ int a = 0;
+                //~ for (auto tt = match.begin(); tt != match.end(); tt++)
+                //~ {
+                    //~ std::cerr << a << ": " << *tt << std::endl;
+                    //~ a++;
+                //~ }
+                //~ if (kind == SymbolKind::Function)
+                //~ {
+                    //~ std::cerr << "::::: " << match[2] << std::endl;
+                //~ }
                 int sline = 0, eline = 0;
                 for (auto it = start; it != match[0].first; ++it)
                  {
@@ -286,7 +296,8 @@ void symbolSearch(const std::string::const_iterator& start,
                     std::cerr << "Exception caught: " << e.what() << ". Continuing...\n";
                     continue; 
                 } 
-                struct Symbol temprorary = {static_cast<std::string>(match[0]), kind, sline, eline};
+                struct Symbol temprorary = {kind == SymbolKind::Function ? static_cast<std::string>(match[2]) : static_cast<std::string>(match[1]),
+                                            static_cast<std::string>(match[0]), kind, sline, eline};
                 symbolList.push_back(temprorary);
                  
     } 

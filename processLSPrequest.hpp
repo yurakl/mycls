@@ -19,6 +19,13 @@ void onDidOpen(const json& j, std::string& answer);
 void onDidClose(const json& j, std::string& answer);
 void onDocumentSymbol(const json& j, std::string& answer);
 
+
+struct SymbolOpt { 
+    int name;
+    int detail;
+    std::regex regex;
+};
+
 enum class SymbolKind {
     File = 1,
     Module = 2,
@@ -48,9 +55,16 @@ enum class SymbolKind {
     TypeParameter = 26
 };
 
+std::map <SymbolKind, SymbolOpt> SymbolOptions =
+{
+    {Class,    1, 0, std::regex(R"(\bclass\s+(\w+)\s*)")}; 
+    {Struct,   1, 0, std::regex(R"(\bstruct\s+(\w+)\s*)")}; 
+    {Function, 2, 0, std::regex(R"(\bclass\s+(\w+)\s*)")};
+};
 //~ Symbol descriptor
 struct Symbol {
     std::string name;
+    std::string detail;
     SymbolKind  kind;
     int         startLine;
     int         endLine;
