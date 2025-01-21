@@ -4,6 +4,14 @@
 Project * project = NULL;
 struct LanguageData LanguageData;
 
+std::map <SymbolKind, SymbolOpt> SymbolOptions =
+{
+    {SymbolKind::Class,    {1, 0, std::regex(R"(\bclass\s+(\w+)\s*)")}},
+    {SymbolKind::Struct,   {1, 0, std::regex(R"(\bstruct\s+(\w+)\s*)")}}, 
+    {SymbolKind::Function, {2, 0, std::regex(R"(\b[a-zA-Z_][a-zA-Z0-9_]*\s*\([^)]*\)\s*)")}},
+    {SymbolKind::Variable, {1, 0, std::regex(R"(\b(?:int|float|double|char|std::string)\s+(\w+)\s*;)")}}
+};
+
 void processAllRequests(std::string& request, std::vector<std::string>& answer_queque)
 {
     std::vector<std::string> request_queque;
@@ -203,7 +211,7 @@ void onDocumentSymbol(const json& j, std::string& answer) {
 
     for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
     {
-        symbolSearch(begin, begin, end, sym_it.second.regex, sym_it.second.first, symbolList);
+        symbolSearch(it->second.text, begin, end, sym_it->second.regex, sym_it->first, symbolList);
     }
      
     
@@ -215,7 +223,7 @@ void onDocumentSymbol(const json& j, std::string& answer) {
     for (const auto& sym : symbolList)
     {
         
-        symbs +=   {
+        json the_symb  =    {
                             {"name", sym.name},
                             {"detail", sym.detail},
                             {"kind", SymbolKind::Class},
@@ -228,12 +236,40 @@ void onDocumentSymbol(const json& j, std::string& answer) {
                                             {   {"line", sym.endLine},  {"character", 0}    }
                                         }
                                     }
-                            }
-                    };
+                            },
+                            {"children"}
+                            };
+                            
+        if (!sym.children.empty())
+        {
+            for (const auto& child : sym.children)
+            {
+                the_symb["children"] +=
 
+                    {
+                            {"name", child.name},
+                            {"detail", child.detail},
+                            {"kind", SymbolKind::Class},
+                            {"range",
+                                    {
+                                        {"start",
+                                            {   {"line", child.startLine},  {"character", 0}    }
+                                        },
+                                        {"end",
+                                            {   {"line", child.endLine},  {"character", 0}    }
+                                        }
+                                    }
+                            },
+                            {"children"}
+                            };
+            }
+        }
+        symbs += the_symb;
     }
     response["result"] = std::move(symbs);
    
+    std::cerr << "onDocumentSymbol Handler End" << std::endl;
+    std::cerr << response << std::endl;
     std::cerr << "onDocumentSymbol Handler End" << std::endl;
     answer = response.dump(); 
     return ;
@@ -251,7 +287,7 @@ void onDidChange(const json& j)
     return;
 }
 
-void symbolSearch(const std::string::const_iterator& start,
+void symbolSearch(std::string& text,
                     std::string::const_iterator begin,
                         std::string::const_iterator end,
                             std::regex& regex,
@@ -259,8 +295,10 @@ void symbolSearch(const std::string::const_iterator& start,
                                     std::vector <struct Symbol>& symbolList)
 {
     std::smatch match;
+    std::string::const_iterator start = text.begin();
+    
     while (std::regex_search(begin, end, match, regex))
-    { 
+    {
                 begin = match[0].second;
                 //~ int a = 0;
                 //~ for (auto tt = match.begin(); tt != match.end(); tt++)
@@ -272,6 +310,7 @@ void symbolSearch(const std::string::const_iterator& start,
                 //~ {
                     //~ std::cerr << "::::: " << match[2] << std::endl;
                 //~ }
+                std::cerr  << "::::: " << match[1]  << std::endl;
                 int sline = 0, eline = 0;
                 for (auto it = start; it != match[0].first; ++it)
                  {
@@ -289,22 +328,60 @@ void symbolSearch(const std::string::const_iterator& start,
                         eline++;
                      }
                  }
-                 try {
-                    auto endBlock =  extractBlock(begin, end);
-                    begin = endBlock;
-                } catch (const std::exception& e) {
-                    std::cerr << "Exception caught: " << e.what() << ". Continuing...\n";
-                    continue; 
-                } 
                 struct Symbol temprorary = {kind == SymbolKind::Function ? static_cast<std::string>(match[2]) : static_cast<std::string>(match[1]),
                                             static_cast<std::string>(match[0]), kind, sline, eline};
                 symbolList.push_back(temprorary);
-                 
+
+                /*
+                if(kind == SymbolKind::Class ||  kind == SymbolKind::Function || kind == SymbolKind::Struct)
+                {
+                    try
+                    {
+                        auto endBlock =  extractBlock(begin, end);
+
+                        struct Symbol temprorary;
+
+                        std::cerr << "Block start: " << std::endl << std::string(begin, endBlock)  << "End Block" << std::endl;
+                        
+                        for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
+                        {
+                            symbolSearch(text, endBlock, end, sym_it->second.regex, sym_it->first, temprorary.children);
+                        }
+                        
+                        
+                        temprorary = {kind == SymbolKind::Function ? static_cast<std::string>(match[2]) : static_cast<std::string>(match[1]),
+                                            static_cast<std::string>(match[0]), kind, sline, eline};
+                        symbolList.push_back(temprorary);
+                                            
+                        size_t startPosition = begin - start;
+                        size_t endPosition   = endBlock - start + 1;
+                        for (std::string::iterator str_it = text.begin() + startPosition; str_it != text.begin() + endPosition; str_it++)
+                        {
+                            if (*str_it != '\n')
+                            {
+                                *str_it = '1';
+                            }
+                        }
+                        begin = endBlock;
+
+                    }
+                    catch (const std::exception& e)
+                    {
+                        std::cerr << "Exception caught: " << e.what() << ". Continuing...\n";
+                        continue;
+                    }
+                } 
+                std::cerr << "full: " << std::endl;
+                std::cerr << text << std::endl;
+                std::cerr << "full: " << std::endl;
+                */
+                         
     } 
 }
 
 std::string::const_iterator extractBlock(const std::string::const_iterator begin, const std::string::const_iterator end)
-{ 
+{
+    
     auto openPos = std::find(begin, end, '{'); 
     if (openPos == end) {
         throw std::runtime_error("Відкриваючу дужку не знайдено!");

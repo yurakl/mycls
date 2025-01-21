@@ -55,12 +55,7 @@ enum class SymbolKind {
     TypeParameter = 26
 };
 
-std::map <SymbolKind, SymbolOpt> SymbolOptions =
-{
-    {Class,    1, 0, std::regex(R"(\bclass\s+(\w+)\s*)")}; 
-    {Struct,   1, 0, std::regex(R"(\bstruct\s+(\w+)\s*)")}; 
-    {Function, 2, 0, std::regex(R"(\bclass\s+(\w+)\s*)")};
-};
+
 //~ Symbol descriptor
 struct Symbol {
     std::string name;
@@ -73,7 +68,7 @@ struct Symbol {
     std::vector<Symbol> children; 
 };
 
-void symbolSearch(const std::string::const_iterator& start,
+void symbolSearch(std::string& text,
                     std::string::const_iterator begin,
                         std::string::const_iterator end,
                             std::regex& regex,
