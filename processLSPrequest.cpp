@@ -8,7 +8,7 @@ std::map <SymbolKind, SymbolOpt> SymbolOptions =
 {
     {SymbolKind::Class,    {1, 0, std::regex(R"(\bclass\s+(\w+)\s*)")}},
     {SymbolKind::Struct,   {1, 0, std::regex(R"(\bstruct\s+(\w+)\s*)")}}, 
-    {SymbolKind::Function, {2, 0, std::regex(R"(\b[a-zA-Z_][a-zA-Z0-9_]*\s*\([^)]*\)\s*)")}},
+    {SymbolKind::Function, {2, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)\s*\(([^)]*)\))")}},
     {SymbolKind::Variable, {1, 0, std::regex(R"(\b(?:int|float|double|char|std::string)\s+(\w+)\s*;)")}}
 };
 
