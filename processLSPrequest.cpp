@@ -196,22 +196,17 @@ void onDocumentSymbol(const json& j, std::string& answer) {
     std::string fname = j["params"]["textDocument"]["uri"];
 
     auto it = project->files.find(fname.substr(8));
-        
-     
-    //~ Регулярні вирази для пошуку класів, структур і функцій
-    std::regex classRegex(R"(\bclass\s+(\w+)\s*)");
-    //~ std::regex structRegex(R"(\bstruct\s+(\w+)\s*{)");
-    std::regex functionRegex(R"((\w[\w\s*&]+)\s+(\w+)\s*\(([^)]*)\)\s*)");
- 
-    std::string::const_iterator begin {it->second.text.begin()};
-    std::string::const_iterator end   {it->second.text.end()};
     
     std::vector <struct Symbol> symbolList;
 
-
+    std::string text = it->second.text;
+    std::string::const_iterator begin {text.begin()};
+    std::string::const_iterator end   {text.end()};
+    
     for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
     {
-        symbolSearch(it->second.text, begin, end, sym_it->second.regex, sym_it->first, symbolList);
+        //~ std::cerr << "onDocumentSymbol Handler: " << static_cast<int>(sym_it->first) << std::endl;
+        symbolSearch(text, begin, end, sym_it->second.regex, sym_it->first, symbolList);
     }
      
     
@@ -224,9 +219,9 @@ void onDocumentSymbol(const json& j, std::string& answer) {
     {
         
         json the_symb  =    {
-                            {"name", sym.name},
+                            {"name",   sym.name},
                             {"detail", sym.detail},
-                            {"kind", SymbolKind::Class},
+                            {"kind",   sym.kind},
                             {"range",
                                     {
                                         {"start",
@@ -237,19 +232,20 @@ void onDocumentSymbol(const json& j, std::string& answer) {
                                         }
                                     }
                             },
-                            {"children"}
+                            {"children", ""}
                             };
                             
         if (!sym.children.empty())
-        {
+        { 
+            the_symb["children"] = json::array(); 
             for (const auto& child : sym.children)
             {
                 the_symb["children"] +=
 
                     {
-                            {"name", child.name},
-                            {"detail", child.detail},
-                            {"kind", SymbolKind::Class},
+                            {"name",    child.name},
+                            {"detail",  child.detail},
+                            {"kind",    child.kind},
                             {"range",
                                     {
                                         {"start",
@@ -259,10 +255,9 @@ void onDocumentSymbol(const json& j, std::string& answer) {
                                             {   {"line", child.endLine},  {"character", 0}    }
                                         }
                                     }
-                            },
-                            {"children"}
+                            }, 
                             };
-            }
+            } 
         }
         symbs += the_symb;
     }
@@ -296,21 +291,16 @@ void symbolSearch(std::string& text,
 {
     std::smatch match;
     std::string::const_iterator start = text.begin();
+
+    //~ std::cerr << "Searching:****************" << std::endl;
+    //~ std::cerr << std::string(begin, end) << std::endl;
+    //~ std::cerr << "Searching:****************" << std::endl;
     
     while (std::regex_search(begin, end, match, regex))
     {
                 begin = match[0].second;
-                //~ int a = 0;
-                //~ for (auto tt = match.begin(); tt != match.end(); tt++)
-                //~ {
-                    //~ std::cerr << a << ": " << *tt << std::endl;
-                    //~ a++;
-                //~ }
-                //~ if (kind == SymbolKind::Function)
-                //~ {
-                    //~ std::cerr << "::::: " << match[2] << std::endl;
-                //~ }
-                std::cerr  << "::::: " << match[1]  << std::endl;
+                
+                //~ std::cerr << "Founded: " << match[0] << ", " << match[1] << ", " << match[2] << std::endl;
                 int sline = 0, eline = 0;
                 for (auto it = start; it != match[0].first; ++it)
                  {
@@ -330,52 +320,45 @@ void symbolSearch(std::string& text,
                  }
                 struct Symbol temprorary = {kind == SymbolKind::Function ? static_cast<std::string>(match[2]) : static_cast<std::string>(match[1]),
                                             static_cast<std::string>(match[0]), kind, sline, eline};
-                symbolList.push_back(temprorary);
-
-                /*
+                
+                
                 if(kind == SymbolKind::Class ||  kind == SymbolKind::Function || kind == SymbolKind::Struct)
                 {
                     try
                     {
-                        auto endBlock =  extractBlock(begin, end);
-
-                        struct Symbol temprorary;
-
-                        std::cerr << "Block start: " << std::endl << std::string(begin, endBlock)  << "End Block" << std::endl;
+                        auto startBlock = match[0].first; 
+                        auto endBlock   = extractBlock(begin, end);
+                        
+                        size_t startPosition = startBlock - start;
+                        size_t endPosition   = endBlock - start + 1;
+                        
+                        //~ std::cerr << "Block start: " <<  std::string(begin, endBlock)  << "End Block\n"  << std::endl;
                         
                         for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
                         {
-                            symbolSearch(text, endBlock, end, sym_it->second.regex, sym_it->first, temprorary.children);
+                            symbolSearch(text, begin, endBlock, sym_it->second.regex, sym_it->first, temprorary.children);
                         }
                         
-                        
-                        temprorary = {kind == SymbolKind::Function ? static_cast<std::string>(match[2]) : static_cast<std::string>(match[1]),
-                                            static_cast<std::string>(match[0]), kind, sline, eline};
-                        symbolList.push_back(temprorary);
-                                            
-                        size_t startPosition = begin - start;
-                        size_t endPosition   = endBlock - start + 1;
-                        for (std::string::iterator str_it = text.begin() + startPosition; str_it != text.begin() + endPosition; str_it++)
+                        for (std::string::iterator  str_it = text.begin() + startPosition;
+                                                    str_it != text.begin() + endPosition;  str_it++)
                         {
                             if (*str_it != '\n')
                             {
-                                *str_it = '1';
+                                *str_it = ' ';
                             }
                         }
+                        
                         begin = endBlock;
 
                     }
                     catch (const std::exception& e)
                     {
-                        std::cerr << "Exception caught: " << e.what() << ". Continuing...\n";
+                        //~ std::cerr << "Exception caught: " << e.what() << ". Continuing...\n";
                         continue;
                     }
-                } 
-                std::cerr << "full: " << std::endl;
-                std::cerr << text << std::endl;
-                std::cerr << "full: " << std::endl;
-                */
-                         
+                }
+
+                symbolList.push_back(temprorary); 
     } 
 }
 
@@ -403,5 +386,5 @@ std::string::const_iterator extractBlock(const std::string::const_iterator begin
         throw std::runtime_error("Відповідну закриваючу дужку не знайдено!");
     }
  
-    return current;
+    return current + 1;
 }                        
