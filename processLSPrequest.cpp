@@ -4,13 +4,17 @@
 Project * project = NULL;
 struct LanguageData LanguageData;
 
+//~ std::string var_prefix(R"(\b(?:)");
+//~ std::string var_suffix(R"()\s+(\w+)\s*))");
+
 std::map <SymbolKind, SymbolOpt> SymbolOptions =
 {
     {SymbolKind::Class,    {1, 0, std::regex(R"(\bclass\s+(\w+)\s*)")}},
     {SymbolKind::Struct,   {1, 0, std::regex(R"(\bstruct\s+(\w+)\s*)")}}, 
     {SymbolKind::Function, {2, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)\s*\(([^)]*)\))")}},
     {SymbolKind::Method,   {4, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)(\s*::\s*)(\w+)\s*\(([^)]*))")}},
-    {SymbolKind::Variable, {1, 0, std::regex(R"(\b(?:int|float|double|char|std::string)\s+(\w+)\s*;)")}}
+    //~ {SymbolKind::Variable, {2, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)\s*(;|=))")}}
+    {SymbolKind::Variable, {3, 0, std::regex(R"(\b([*&]*([a-zA-Z_]+)\s*[*&]*\s+)+[*&]*([a-zA-Z_]+)\s*[;|=])")}}
 };
 
 void processAllRequests(std::string& request, std::vector<std::string>& answer_queque)
@@ -203,13 +207,27 @@ void onDocumentSymbol(const json& j, std::string& answer) {
     std::string text = it->second.text;
     std::string::const_iterator begin {text.begin()};
     std::string::const_iterator end   {text.end()};
+ 
+    //~ std::string temprorary;
+    //~ for (const auto& word : LanguageData.types)
+    //~ {
+        //~ temprorary += word + '|';
+    //~ }
+    //~ for (const auto& word : LanguageData.custom)
+    //~ {
+        //~ temprorary += word + '|';
+    //~ }
+    //~ temprorary.pop_back();
+    //~ std::string var_regex = var_prefix + temprorary + var_suffix;
     
     for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
     {
         //~ std::cerr << "onDocumentSymbol Handler: " << static_cast<int>(sym_it->first) << std::endl;
         symbolSearch(text, begin, end, sym_it->second.regex, sym_it->first, symbolList);
     }
-     
+ 
+    
+    
     
     json response;
     response["jsonrpc"] = "2.0";
@@ -256,7 +274,8 @@ void onDocumentSymbol(const json& j, std::string& answer) {
                                             {   {"line", child.endLine},  {"character", 0}    }
                                         }
                                     }
-                            }, 
+                            },
+                            {"children", ""}
                             };
             } 
         }
