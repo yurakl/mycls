@@ -17,6 +17,8 @@ std::map <SymbolKind, SymbolOpt> SymbolOptions =
     {SymbolKind::Variable, {3, 0, std::regex(R"(\b([*&]*([a-zA-Z_]+)\s*[*&]*\s+)+[*&]*([a-zA-Z_]+)\s*[;|=])")}}
 };
 
+std::vector <struct Symbol> symbolList;
+
 std::set <std::string>          DefTypes; 
 std::map <std::string, Symbol>  UserTypes;
  
@@ -106,7 +108,7 @@ int processLSPRequest(const std::string& request, std::string& answer)
                 handleInitialize(j, answer);
             }
             else if (method == "textDocument/completion") {
-                answer = "completion";
+                onComletion(j, answer);
             }
             else if (method == "textDocument/definition") {
                 answer = "definition";
@@ -205,7 +207,7 @@ void onDocumentSymbol(const json& j, std::string& answer) {
 
     auto it = project->files.find(fname.substr(8));
     
-    std::vector <struct Symbol> symbolList;
+    symbolList.clear();
 
     std::string text = it->second.text;
     std::string::const_iterator begin {text.begin()};
@@ -285,10 +287,7 @@ void onDocumentSymbol(const json& j, std::string& answer) {
         symbs += the_symb;
     }
     response["result"] = std::move(symbs);
-   
-    std::cerr << "onDocumentSymbol Handler End" << std::endl;
-    std::cerr << response << std::endl;
-    std::cerr << "onDocumentSymbol Handler End" << std::endl;
+    
     answer = response.dump(); 
     return ;
 
@@ -314,11 +313,7 @@ void symbolSearch(std::string& text,
 {
     std::smatch match;
     std::string::const_iterator start = text.begin();
-
-    //~ std::cerr << "Searching:****************" << std::endl;
-    //~ std::cerr << std::string(begin, end) << std::endl;
-    //~ std::cerr << "Searching:****************" << std::endl;
-    
+     
     while (std::regex_search(begin, end, match, regex))
     {
                 begin = match[0].second;
@@ -410,4 +405,87 @@ std::string::const_iterator extractBlock(const std::string::const_iterator begin
     }
  
     return current + 1;
-}                        
+}
+
+void onComletion(const json& j, std::string& answer)
+{
+    std::cerr << "onComletion Handler" << std::endl;
+    std::string fname = j["params"]["textDocument"]["uri"];
+    auto it = project->files.find(fname.substr(8));
+
+    size_t  line         = j["params"]["position"]["line"];
+    size_t  character    = j["params"]["position"]["character"];
+    int     l_iterator   = 1;
+    auto    s_iterator   = it->second.text.begin();
+    
+    while(l_iterator <= line)
+    {
+        if (*s_iterator == '\n') [[unlikely]]
+        {
+            l_iterator++;
+        }
+        s_iterator++;
+    }
+    s_iterator += character - 1;
+
+    std::vector<std::string> results;
+    std::cerr << "1: "<< std::string(s_iterator-1, s_iterator+1)  << std::endl;
+    if (*(s_iterator - 1) != '.' || *(s_iterator - 1) != '>')
+    {
+        std::smatch match;
+        std::regex  regex_word(R"(([a-zA-Z_]+)\s+)");
+        std::regex_search(static_cast<std::string::const_iterator>(s_iterator),
+                          static_cast<std::string::const_iterator>(it->second.text.end()),
+                          match,
+                          regex_word);
+                          
+        std::string word(match[1].first, match[1].second);
+        std::cerr << "2: "<< word  << std::endl;
+        std::copy_if(LanguageData.keywords.begin(),
+                     LanguageData.keywords.end(),
+                     std::back_inserter(results),
+                     [&word](auto iterator) { return iterator.starts_with(word); });
+        std::copy_if(LanguageData.types.begin(),
+                     LanguageData.types.end(),
+                     std::back_inserter(results),
+                     [&word](auto iterator) { return iterator.starts_with(word); });
+    }
+
+    for(const auto& el : results)
+    {
+        std::cerr << "Result: " << el << std::endl;
+    }
+
+    json response;
+    response["jsonrpc"] = "2.0";
+    response["id"] = j["id"];  
+    json symbs;
+
+    if(!results.empty())
+    {
+        symbs["isIncomplete"]   = "false";
+        symbs["items"]   = json::array();
+        int a = 0;
+        for(const auto& el : results)
+        {
+            symbs["items"] +=   {
+                                {"label",   el},
+                                {"kind",    6},
+                                {"detail",  "Build-in type"},
+                                {"documentation",   "Build-in type"},
+                                {"insertText",      el},
+                                {"sortText",        std::to_string(a)}
+                                };
+            a++;
+        }
+    }
+      
+    response["result"] = std::move(symbs);
+   
+    //~ std::cerr << "onDocumentSymbol Handler End" << std::endl;
+    //~ std::cerr << response << std::endl;
+    //~ std::cerr << "onDocumentSymbol Handler End" << std::endl;
+    answer = response.dump(); 
+    return ;
+    
+}   

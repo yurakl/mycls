@@ -17,7 +17,7 @@ void onDidChange(const json& j);
 void onDidOpen(const json& j, std::string& answer);
 void onDidClose(const json& j, std::string& answer);
 void onDocumentSymbol(const json& j, std::string& answer);
-
+void onComletion(const json& j, std::string& answer);
 
 struct SymbolOpt { 
     int name;
