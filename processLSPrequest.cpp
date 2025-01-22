@@ -17,6 +17,9 @@ std::map <SymbolKind, SymbolOpt> SymbolOptions =
     {SymbolKind::Variable, {3, 0, std::regex(R"(\b([*&]*([a-zA-Z_]+)\s*[*&]*\s+)+[*&]*([a-zA-Z_]+)\s*[;|=])")}}
 };
 
+std::set <std::string>          DefTypes; 
+std::map <std::string, Symbol>  UserTypes;
+ 
 void processAllRequests(std::string& request, std::vector<std::string>& answer_queque)
 {
     std::vector<std::string> request_queque;

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <Windows.h>
-
+#include <windows.h>
+#include <winbase.h>
 #include "processLSPrequest.hpp"
 
 const int buf_size = 4096;
