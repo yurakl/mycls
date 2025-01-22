@@ -9,6 +9,7 @@ std::map <SymbolKind, SymbolOpt> SymbolOptions =
     {SymbolKind::Class,    {1, 0, std::regex(R"(\bclass\s+(\w+)\s*)")}},
     {SymbolKind::Struct,   {1, 0, std::regex(R"(\bstruct\s+(\w+)\s*)")}}, 
     {SymbolKind::Function, {2, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)\s*\(([^)]*)\))")}},
+    {SymbolKind::Method,   {4, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)(\s*::\s*)(\w+)\s*\(([^)]*))")}},
     {SymbolKind::Variable, {1, 0, std::regex(R"(\b(?:int|float|double|char|std::string)\s+(\w+)\s*;)")}}
 };
 
@@ -318,7 +319,7 @@ void symbolSearch(std::string& text,
                         eline++;
                      }
                  }
-                struct Symbol temprorary = {kind == SymbolKind::Function ? static_cast<std::string>(match[2]) : static_cast<std::string>(match[1]),
+                struct Symbol temprorary = {static_cast<std::string>(match[SymbolOptions[kind].name]),
                                             static_cast<std::string>(match[0]), kind, sline, eline};
                 
                 
