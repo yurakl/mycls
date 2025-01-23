@@ -1,55 +1,142 @@
 {
   "languages": {
-    "C": {
-      "keywords": [
-        "auto", "break", "case", "char", "const", "continue", "default", "do",
-        "double", "else", "enum", "extern", "float", "for", "goto", "if",
-        "inline", "int", "long", "register", "restrict", "return", "short",
-        "signed", "sizeof", "static", "struct", "switch", "typedef", "union",
-        "unsigned", "void", "volatile", "while", "_Alignas", "_Alignof",
-        "_Atomic", "_Bool", "_Complex", "_Generic", "_Imaginary", "_Noreturn",
-        "_Static_assert", "_Thread_local"
-      ],
-      "constructs": [
-        "function", "struct", "union", "pointer", "array", "for-loop",
-        "while-loop", "do-while-loop", "if-statement", "switch-statement"
-      ],
-      "built-in types": [
-        "char", "int", "float", "double", "void", "unsigned char",
-        "unsigned int", "unsigned long", "unsigned short", "signed char",
-        "signed int", "signed long", "signed short", "_Bool", "_Complex", "_Imaginary"
-      ]
+    "C++": [
+     {
+        "label": "bool",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents a boolean value (true or false)."
     },
-    "C++": {
-      "keywords": [
-        "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel",
-        "atomic_commit", "atomic_noexcept", "auto", "bitand", "bitor",
-        "bool", "break", "case", "catch", "char", "char8_t", "char16_t",
-        "char32_t", "class", "compl", "concept", "const", "consteval",
-        "constexpr", "constinit", "const_cast", "continue", "co_await",
-        "co_return", "co_yield", "decltype", "default", "delete", "do",
-        "double", "dynamic_cast", "else", "enum", "explicit", "export",
-        "extern", "false", "float", "for", "friend", "goto", "if", "inline",
-        "int", "long", "mutable", "namespace", "new", "noexcept", "not",
-        "not_eq", "nullptr", "operator", "or", "or_eq", "private", "protected",
-        "public", "register", "reinterpret_cast", "requires", "return",
-        "short", "signed", "sizeof", "static", "static_assert", "static_cast",
-        "struct", "switch", "template", "this", "thread_local", "throw",
-        "true", "try", "typedef", "typeid", "typename", "union", "unsigned",
-        "using", "virtual", "void", "volatile", "wchar_t", "while", "xor",
-        "xor_eq"
-      ],
-      "constructs": [
-        "class", "namespace", "template", "lambda", "for-loop", "while-loop",
-        "do-while-loop", "if-statement", "switch-statement", "try-catch",
-        "operator-overloading", "inheritance", "polymorphism", "RAII"
-      ],
-      "built-in types": [
-        "bool", "char", "char8_t", "char16_t", "char32_t", "int", "float",
-        "double", "void", "wchar_t", "unsigned char", "unsigned int",
-        "unsigned long", "unsigned short", "signed char", "signed int",
-        "signed long", "signed short", "long long", "unsigned long long"
-      ]
+    {
+        "label": "char",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents a single character."
+    },
+    {
+        "label": "int",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents an integer number."
+    },
+    {
+        "label": "float",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents a single-precision floating-point number."
+    },
+    {
+        "label": "double",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents a double-precision floating-point number."
+    },
+    {
+        "label": "void",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents the absence of a value or type."
+    },
+    {
+        "label": "wchar_t",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents a wide character."
+    },
+    {
+        "label": "unsigned char",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents an unsigned single character."
+    },
+    {
+        "label": "unsigned int",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents an unsigned integer number."
+    },
+    {
+        "label": "unsigned long",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents an unsigned long integer."
+    },
+    {
+        "label": "unsigned short",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents an unsigned short integer."
+    },
+    {
+        "label": "signed char",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents a signed single character."
+    },
+    {
+        "label": "signed int",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents a signed integer number."
+    },
+    {
+        "label": "signed long",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents a signed long integer."
+    },
+    {
+        "label": "signed short",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents a signed short integer."
+    },
+    {
+        "label": "long long",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents a long long integer."
+    },
+    {
+        "label": "unsigned long long",
+        "kind": 6,
+        "detail": "Built-in type",
+        "documentation": "Represents an unsigned long long integer."
+    },
+    {
+        "label": "class",
+        "kind": 7,
+        "detail": "Construct",
+        "documentation": "Defines a user-defined data type that encapsulates data and functions."
+    }, 
+    {
+        "label": "namespace",
+        "kind": 7,
+        "detail": "Construct",
+        "documentation": "Defines a scope to group identifiers and avoid name conflicts."
+    },
+    {
+        "label": "template",
+        "kind": 7,
+        "detail": "Construct",
+        "documentation": "Defines a generic programming construct that works with any data type."
+    },
+    {
+        "label": "template",
+        "kind": 14,
+        "detail": "Keyword",
+        "documentation": "Defines a generic programming construct that works with any data type.",
+        "insertText": "template <typename T> {}",
+        "insertTextFormat": 1
+    },
+    {
+        "label": "lambda",
+        "kind": 14,
+        "detail": "Keyword",
+        "documentation": "Defines an anonymous function or closure.",
+        "insertText": "[]() {}",
+        "insertTextFormat": 1
     }
+    ]
   }
 }

@@ -67,6 +67,15 @@ struct Symbol {
     std::vector<Symbol> children; 
 };
 
+struct defSymbol {
+    std::string name;
+    std::string detail;
+    SymbolKind  kind;
+    std::string documentation;
+    std::string insertText;
+    int         insertTextFormat;
+};
+
 void symbolSearch(std::string& text,
                     std::string::const_iterator begin,
                         std::string::const_iterator end,

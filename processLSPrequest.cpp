@@ -2,7 +2,7 @@
 
 
 Project * project = NULL;
-struct LanguageData LanguageData;
+std::vector<defSymbol> defaultSymbols;
 
 //~ std::string var_prefix(R"(\b(?:)");
 //~ std::string var_suffix(R"()\s+(\w+)\s*))");
@@ -145,10 +145,22 @@ void handleInitialize(const json& j,  std::string& answer) {
     std::cerr << "Read Language Data" << std::endl;
 
     json data = json::parse(file);
+    std::cerr << "Read Language Data" << std::endl;
     // if (rootUri.end_with(".c"))
-    LanguageData.keywords   = data.at("languages").at("C++").at("keywords").get<std::vector<std::string>>();
-    LanguageData.constructs = data.at("languages").at("C++").at("constructs").get<std::vector<std::string>>();
-    LanguageData.types      = data.at("languages").at("C++").at("built-in types").get<std::vector<std::string>>();
+    for (const auto& entry : data["languages"]["C++"])
+    {
+        std::cerr << "label: "  << entry["label"] << std::endl;
+        std::cerr << "detail: " << entry["detail"] << std::endl;
+        std::cerr << "kind: "   << entry["kind"] << std::endl;
+        std::cerr << "documentation: "   << entry["documentation"] << std::endl; 
+        defaultSymbols.emplace_back( defSymbol{ entry["label"],
+                                                entry["detail"],
+                                                entry["kind"],
+                                                entry["documentation"],
+                                                entry.contains("insertText") ? entry.at("insertText") : "",
+                                                entry.contains("insertTextFormat") ? static_cast<int>(entry.at("insertTextFormat")) : 0 });
+        std::cerr << "defaultSymbols: " << entry["label"] << std::endl;
+    }
     std::cerr << "Read Language Data Done" << std::endl;
 
     json response;
@@ -428,7 +440,7 @@ void onComletion(const json& j, std::string& answer)
     }
     s_iterator += character - 1;
 
-    std::vector<std::string> results;
+    std::vector<defSymbol> results;
     std::cerr << "1: "<< std::string(s_iterator-1, s_iterator+1)  << std::endl;
     if (*(s_iterator - 1) != '.' || *(s_iterator - 1) != '>')
     {
@@ -441,19 +453,15 @@ void onComletion(const json& j, std::string& answer)
                           
         std::string word(match[1].first, match[1].second);
         std::cerr << "2: "<< word  << std::endl;
-        std::copy_if(LanguageData.keywords.begin(),
-                     LanguageData.keywords.end(),
+        std::copy_if(defaultSymbols.begin(),
+                     defaultSymbols.end(),
                      std::back_inserter(results),
-                     [&word](auto iterator) { return iterator.starts_with(word); });
-        std::copy_if(LanguageData.types.begin(),
-                     LanguageData.types.end(),
-                     std::back_inserter(results),
-                     [&word](auto iterator) { return iterator.starts_with(word); });
+                     [&word](auto& iterator) { return iterator.name.starts_with(word); }); 
     }
 
     for(const auto& el : results)
     {
-        std::cerr << "Result: " << el << std::endl;
+        std::cerr << "Result: " << el.name << std::endl;
     }
 
     json response;
@@ -469,11 +477,11 @@ void onComletion(const json& j, std::string& answer)
         for(const auto& el : results)
         {
             symbs["items"] +=   {
-                                {"label",   el},
-                                {"kind",    6},
-                                {"detail",  "Build-in type"},
-                                {"documentation",   "Build-in type"},
-                                {"insertText",      el},
+                                {"label",   el.name},
+                                {"kind",    el.kind},
+                                {"detail",  el.detail},
+                                {"documentation",   el.documentation},
+                                {"insertText",      el.insertText},
                                 {"sortText",        std::to_string(a)}
                                 };
             a++;
