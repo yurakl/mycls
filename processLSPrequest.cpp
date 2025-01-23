@@ -149,17 +149,12 @@ void handleInitialize(const json& j,  std::string& answer) {
     // if (rootUri.end_with(".c"))
     for (const auto& entry : data["languages"]["C++"])
     {
-        std::cerr << "label: "  << entry["label"] << std::endl;
-        std::cerr << "detail: " << entry["detail"] << std::endl;
-        std::cerr << "kind: "   << entry["kind"] << std::endl;
-        std::cerr << "documentation: "   << entry["documentation"] << std::endl; 
         defaultSymbols.emplace_back( defSymbol{ entry["label"],
                                                 entry["detail"],
                                                 entry["kind"],
                                                 entry["documentation"],
                                                 entry.contains("insertText") ? entry.at("insertText") : "",
                                                 entry.contains("insertTextFormat") ? static_cast<int>(entry.at("insertTextFormat")) : 0 });
-        std::cerr << "defaultSymbols: " << entry["label"] << std::endl;
     }
     std::cerr << "Read Language Data Done" << std::endl;
 
