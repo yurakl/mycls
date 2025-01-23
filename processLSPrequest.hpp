@@ -57,24 +57,28 @@ enum class SymbolKind {
 
 //~ Symbol descriptor
 struct Symbol {
-    std::string name;
+    std::string label;
     std::string detail;
     SymbolKind  kind;
-    int         startLine;
-    int         endLine;
 
-    //~ List of nested symbols
-    std::vector<Symbol> children; 
-};
-
-struct defSymbol {
-    std::string name;
-    std::string detail;
-    SymbolKind  kind;
     std::string documentation;
     std::string insertText;
     int         insertTextFormat;
+
+    int         startLine;
+    int         endLine;
+ 
+    std::vector<Symbol> children; 
 };
+
+//~ struct defSymbol {
+    //~ std::string name;
+    //~ std::string detail;
+    //~ SymbolKind  kind;
+    //~ std::string documentation;
+    //~ std::string insertText;
+    //~ int         insertTextFormat;
+//~ };
 
 void symbolSearch(std::string& text,
                     std::string::const_iterator begin,

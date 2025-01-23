@@ -2,7 +2,7 @@
 
 
 Project * project = NULL;
-std::vector<defSymbol> defaultSymbols;
+std::vector<Symbol> defaultSymbols;
  
 std::map <SymbolKind, SymbolOpt> SymbolOptions =
 {
@@ -14,7 +14,7 @@ std::map <SymbolKind, SymbolOpt> SymbolOptions =
     {SymbolKind::Variable, {3, 0, std::regex(R"(\b([*&]*([a-zA-Z_]+)\s*[*&]*\s+)+[*&]*([a-zA-Z_]+)\s*[;|=])")}}
 };
 
-std::vector <struct Symbol> symbolList;
+std::vector <Symbol> symbolList;
 
 //~ std::set <std::string>          DefTypes; 
 //~ std::map <std::string, Symbol>  UserTypes;
@@ -146,12 +146,12 @@ void handleInitialize(const json& j,  std::string& answer) {
     // if (rootUri.end_with(".c"))
     for (const auto& entry : data["languages"]["C++"])
     {
-        defaultSymbols.emplace_back( defSymbol{ entry["label"],
-                                                entry["detail"],
-                                                entry["kind"],
-                                                entry["documentation"],
-                                                entry.contains("insertText") ? entry.at("insertText") : "",
-                                                entry.contains("insertTextFormat") ? static_cast<int>(entry.at("insertTextFormat")) : 0 });
+        defaultSymbols.emplace_back(Symbol{ .label      = entry["label"],
+                                            .detail     = entry["detail"],
+                                            .kind       = entry["kind"],
+                                            .documentation  = entry["documentation"],
+                                            .insertText     = entry.contains("insertText") ? entry.at("insertText") : "",
+                                            .insertTextFormat = entry.contains("insertTextFormat") ? static_cast<int>(entry.at("insertTextFormat")) : 0 });
     }
     std::cerr << "Read Language Data Done" << std::endl;
 
@@ -231,7 +231,7 @@ void onDocumentSymbol(const json& j, std::string& answer) {
     {
         
         json the_symb  =    {
-                            {"name",   sym.name},
+                            {"name",   sym.label},
                             {"detail", sym.detail},
                             {"kind",   sym.kind},
                             {"range",
@@ -255,7 +255,7 @@ void onDocumentSymbol(const json& j, std::string& answer) {
                 the_symb["children"] +=
 
                     {
-                            {"name",    child.name},
+                            {"name",    child.label},
                             {"detail",  child.detail},
                             {"kind",    child.kind},
                             {"range",
@@ -323,8 +323,12 @@ void symbolSearch(std::string& text,
                         eline++;
                      }
                  }
-                struct Symbol temprorary = {static_cast<std::string>(match[SymbolOptions[kind].name]),
-                                            static_cast<std::string>(match[0]), kind, sline, eline};
+                struct Symbol temprorary = {
+                                        .label  = static_cast<std::string>(match[SymbolOptions[kind].name]),
+                                        .detail = static_cast<std::string>(match[0]),
+                                        .kind   = kind,
+                                        .startLine  = sline,
+                                        .endLine    = eline};
                 
                 
                 if(kind == SymbolKind::Class ||  kind == SymbolKind::Function || kind == SymbolKind::Struct)
@@ -415,7 +419,8 @@ void onComletion(const json& j, std::string& answer)
     }
     s_iterator += character - 1;
 
-    std::vector<defSymbol> results;
+    std::vector<Symbol> results; 
+    
     std::cerr << "1: "<< std::string(s_iterator-1, s_iterator+1)  << std::endl;
     if (*(s_iterator - 1) != '.' || *(s_iterator - 1) != '>')
     {
@@ -431,7 +436,8 @@ void onComletion(const json& j, std::string& answer)
         std::copy_if(defaultSymbols.begin(),
                      defaultSymbols.end(),
                      std::back_inserter(results),
-                     [&word](auto& iterator) { return iterator.name.starts_with(word); });
+                     [&word](auto& iterator) { return iterator.label.starts_with(word); });
+ 
     } else
     {
             std::cerr << "++++++++++++class member" << std::endl;
@@ -439,7 +445,7 @@ void onComletion(const json& j, std::string& answer)
 
     for(const auto& el : results)
     {
-        std::cerr << "Result: " << el.name << std::endl;
+        std::cerr << "Result: " << el.label << std::endl;
     }
 
     json response;
@@ -455,7 +461,7 @@ void onComletion(const json& j, std::string& answer)
         for(const auto& el : results)
         {
             symbs["items"] +=   {
-                                {"label",   el.name},
+                                {"label",   el.label},
                                 {"kind",    el.kind},
                                 {"detail",  el.detail},
                                 {"documentation",   el.documentation},
