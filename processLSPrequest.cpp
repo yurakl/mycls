@@ -3,10 +3,7 @@
 
 Project * project = NULL;
 std::vector<defSymbol> defaultSymbols;
-
-//~ std::string var_prefix(R"(\b(?:)");
-//~ std::string var_suffix(R"()\s+(\w+)\s*))");
-
+ 
 std::map <SymbolKind, SymbolOpt> SymbolOptions =
 {
     {SymbolKind::Class,    {1, 0, std::regex(R"(\bclass\s+(\w+)\s*)")}},
@@ -19,8 +16,8 @@ std::map <SymbolKind, SymbolOpt> SymbolOptions =
 
 std::vector <struct Symbol> symbolList;
 
-std::set <std::string>          DefTypes; 
-std::map <std::string, Symbol>  UserTypes;
+//~ std::set <std::string>          DefTypes; 
+//~ std::map <std::string, Symbol>  UserTypes;
  
 void processAllRequests(std::string& request, std::vector<std::string>& answer_queque)
 {
@@ -219,28 +216,12 @@ void onDocumentSymbol(const json& j, std::string& answer) {
     std::string text = it->second.text;
     std::string::const_iterator begin {text.begin()};
     std::string::const_iterator end   {text.end()};
- 
-    //~ std::string temprorary;
-    //~ for (const auto& word : LanguageData.types)
-    //~ {
-        //~ temprorary += word + '|';
-    //~ }
-    //~ for (const auto& word : LanguageData.custom)
-    //~ {
-        //~ temprorary += word + '|';
-    //~ }
-    //~ temprorary.pop_back();
-    //~ std::string var_regex = var_prefix + temprorary + var_suffix;
     
     for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
-    {
-        //~ std::cerr << "onDocumentSymbol Handler: " << static_cast<int>(sym_it->first) << std::endl;
+    { 
         symbolSearch(text, begin, end, sym_it->second.regex, sym_it->first, symbolList);
     }
- 
-    
-    
-    
+  
     json response;
     response["jsonrpc"] = "2.0";
     response["id"] = j["id"];  
@@ -297,7 +278,6 @@ void onDocumentSymbol(const json& j, std::string& answer) {
     
     answer = response.dump(); 
     return ;
-
 }
 
 
@@ -451,7 +431,10 @@ void onComletion(const json& j, std::string& answer)
         std::copy_if(defaultSymbols.begin(),
                      defaultSymbols.end(),
                      std::back_inserter(results),
-                     [&word](auto& iterator) { return iterator.name.starts_with(word); }); 
+                     [&word](auto& iterator) { return iterator.name.starts_with(word); });
+    } else
+    {
+            std::cerr << "++++++++++++class member" << std::endl;
     }
 
     for(const auto& el : results)
