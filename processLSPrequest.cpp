@@ -407,7 +407,7 @@ void onComletion(const json& j, std::string& answer)
     size_t  line         = j["params"]["position"]["line"];
     size_t  character    = j["params"]["position"]["character"];
     int     l_iterator   = 1;
-    auto    s_iterator   = it->second.text.begin();
+    std::string::const_iterator s_iterator = it->second.text.begin(); 
     
     while(l_iterator <= line)
     {
@@ -418,29 +418,46 @@ void onComletion(const json& j, std::string& answer)
         s_iterator++;
     }
     s_iterator += character - 1;
+    std::string::const_iterator e_iterator = s_iterator + 1;
+    
+    
+    while(*s_iterator != ' ' && *s_iterator != '\t' && *s_iterator != ';' && *s_iterator != '\n' && s_iterator != it->second.text.begin())
+    {
+        s_iterator--;
+    }
+    while(*e_iterator != ' ' && *e_iterator != '\t' && *e_iterator != ';' && *e_iterator != '\n' && e_iterator != it->second.text.begin())
+    {
+        e_iterator++;
+    }
+    
+    std::cerr << "1.s:"<< std::string(s_iterator, e_iterator)  << std::endl;
+    std::smatch match;
 
     std::vector<Symbol> results; 
     
-    std::cerr << "1: "<< std::string(s_iterator-1, s_iterator+1)  << std::endl;
-    if (*(s_iterator - 1) != '.' || *(s_iterator - 1) != '>')
-    {
-        std::smatch match;
-        std::regex  regex_word(R"(([a-zA-Z_]+)\s+)");
-        std::regex_search(static_cast<std::string::const_iterator>(s_iterator),
-                          static_cast<std::string::const_iterator>(it->second.text.end()),
+    if (std::regex_search(s_iterator,
+                          e_iterator,
                           match,
-                          regex_word);
+                          std::regex{R"(\b([a-zA-Z0-9_]+)(^\.|->|(::)))"}))
+    {       
                           
         std::string word(match[1].first, match[1].second);
-        std::cerr << "2: "<< word  << std::endl;
+
         std::copy_if(defaultSymbols.begin(),
                      defaultSymbols.end(),
                      std::back_inserter(results),
                      [&word](auto& iterator) { return iterator.label.starts_with(word); });
+        std::copy_if(symbolList.begin(),
+                     symbolList.end(),
+                     std::back_inserter(results),
+                     [&word](auto& iterator) { return iterator.label.starts_with(word); });
  
-    } else
+    } else if (std::regex_search(s_iterator,
+                          e_iterator,
+                          match,
+                          std::regex{R"(\b([a-zA-Z][a-zA-Z0-9_]*)(\.|->|(::))([a-zA-Z]*)?)"}))
     {
-            std::cerr << "++++++++++++class member" << std::endl;
+            std::cerr << "++++++++++++class member: " << *s_iterator << std::endl;
     }
 
     for(const auto& el : results)
