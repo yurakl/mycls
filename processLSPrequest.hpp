@@ -60,7 +60,7 @@ struct Symbol {
     std::string label;
     std::string detail;
     SymbolKind  kind;
-
+    std::string type;
     std::string documentation;
     std::string insertText;
     int         insertTextFormat;
