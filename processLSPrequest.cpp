@@ -4,21 +4,18 @@
 Project * project = NULL;
 std::vector<Symbol> defaultSymbols;
  
-std::map <SymbolKind, SymbolOpt> SymbolOptions =
+std::unordered_map <SymbolKind, SymbolOpt> SymbolOptions =
 {
-    {SymbolKind::Class,    {1, 0, std::regex(R"(\bclass\s+(\w+)\s*)")}},
-    {SymbolKind::Struct,   {1, 0, std::regex(R"(\bstruct\s+(\w+)\s*)")}}, 
-    {SymbolKind::Function, {2, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)\s*\(([^)]*)\))")}},
-    {SymbolKind::Method,   {4, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)(\s*::\s*)(\w+)\s*\(([^)]*))")}},
     //~ {SymbolKind::Variable, {2, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)\s*(;|=))")}}
-    {SymbolKind::Variable, {3, 0, std::regex(R"(\b([*&]*([a-zA-Z_]+)\s*[*&]*\s+)+[*&]*([a-zA-Z_]+)\s*[;|=])")}}
+    {SymbolKind::Variable, {3, 0, std::regex(R"(\b([*&]*([a-zA-Z_]+)\s*[*&]*\s+)+[*&]*([a-zA-Z_]+)\s*[;|=])")}},
+    {SymbolKind::Method,   {4, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)(\s*::\s*)(\w+)\s*\(([^)]*))")}},
+    {SymbolKind::Function, {2, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)\s*\(([^)]*)\))")}},
+    {SymbolKind::Struct,   {1, 0, std::regex(R"(\bstruct\s+(\w+)\s*)")}},
+    {SymbolKind::Class,    {1, 0, std::regex(R"(\bclass\s+(\w+)\s*)")}}
 };
 
 std::vector <Symbol> symbolList;
 
-//~ std::set <std::string>          DefTypes; 
-//~ std::map <std::string, Symbol>  UserTypes;
- 
 void processAllRequests(std::string& request, std::vector<std::string>& answer_queque)
 {
     std::vector<std::string> request_queque;
@@ -218,10 +215,18 @@ void onDocumentSymbol(const json& j, std::string& answer) {
     std::string::const_iterator end   {text.end()};
     
     for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
-    { 
+    {
+        std::cerr << "Searching: " << static_cast<int>(sym_it->first) << std::endl;
         symbolSearch(text, begin, end, sym_it->second.regex, sym_it->first, symbolList);
     }
-  
+
+    std::cerr << "Symbol List start:" << std::endl;
+
+    std::for_each(symbolList.begin(), symbolList.end(), [](auto& iterator){ std::cerr << iterator.label << "-" << iterator.type << std::endl; });
+    
+    std::cerr << "Symbol List end." << std::endl;
+
+    
     json response;
     response["jsonrpc"] = "2.0";
     response["id"] = j["id"];  
@@ -347,7 +352,11 @@ void symbolSearch(std::string& text,
                         {
                             symbolSearch(text, begin, endBlock, sym_it->second.regex, sym_it->first, temprorary.children);
                         }
-                        
+
+                        //~ std::cerr << std::string(match[0].first, match[0].second) << std::endl;
+                        //~ std::cerr << "-------Block---------------" << std::endl;
+                        //~ std::cerr << std::string(begin, endBlock) << std::endl;
+                        //~ std::cerr << "-------Block---------------" << std::endl;
                         for (std::string::iterator  str_it = text.begin() + startPosition;
                                                     str_it != text.begin() + endPosition;  str_it++)
                         {
@@ -368,19 +377,16 @@ void symbolSearch(std::string& text,
                 }
                 if (kind == SymbolKind::Variable)
                 {
-                    std::cerr << "Type search: " << std::string(match[0].first, match[0].second) << std::endl;
+                    //~ std::cerr << "Type search: " << std::string(match[0].first, match[0].second) << std::endl;
                     std::string word = R"(\b((?!const|static|extern|mutable|volatile|thread_local|constexpr|explicit)\w+)+\b)";
-                    std::cerr << "Regex search: " << word << std::endl;
+                    //~ std::cerr << "Regex search: " << word << std::endl;
                     std::regex_search(match[0].first, match[0].second, match, std::regex{word});
                     temprorary.type = match[1];
-
-                    std::cerr << "1..." << match[1] << std::endl;
-                    std::cerr << "2..." << match[2] << std::endl;
-                    std::cerr << "3..." << match[3] << std::endl;
-                    std::cerr << "4..." << match[4] << std::endl;
-                    std::cerr << "5..." << match[5] << std::endl;
-                    std::cerr << "Name: " << temprorary.label << " Type: " << temprorary.type << std::endl; 
+                    
                 }
+                //~ std::cerr << "----------Text------------" << std::endl;
+                //~ std::cerr << text << std::endl;
+                //~ std::cerr << "----------Text------------" << std::endl;
                 symbolList.push_back(temprorary); 
     } 
 }
@@ -466,11 +472,10 @@ void onComletion(const json& j, std::string& answer)
                      std::back_inserter(results),
                      [&word](auto& iterator) { return iterator.label.starts_with(word); });
  
-    }
-    else if (std::regex_search(s_iterator,
+    } else if (std::regex_search(s_iterator,
                           e_iterator,
                           match,
-                          std::regex{R"(\b([a-zA-Z][a-zA-Z0-9_]*)(\.|->|(::))([a-zA-Z]*)?)"}))
+                          std::regex{R"(\b([a-zA-Z][a-zA-Z0-9_]*)(\.|->)([a-zA-Z]*)?)"}))
     {
             std::cerr << "1..." << match[1] << std::endl;
             std::cerr << "2..." << match[2] << std::endl;
@@ -480,10 +485,13 @@ void onComletion(const json& j, std::string& answer)
             std::string word(match[1].first, match[1].second);
             
             auto symbol_it = std::find_if(symbolList.begin(), symbolList.end(), [&word](auto& iterator) { return iterator.label == word;});
-            word = symbol_it->type;
+            
+
+            std::cerr << "Name: " << symbol_it->label << " Type: " << symbol_it->type << std::endl;
             
             if(symbol_it != symbolList.end())
             {
+                word = symbol_it->type;
                 auto symbol_it = std::find_if(symbolList.begin(), symbolList.end(), [&word](auto& iterator) { return iterator.label == word;});
                 word = std::string(match[4].first, match[4].second);
                 std::copy_if(symbol_it->children.begin(),
@@ -492,8 +500,25 @@ void onComletion(const json& j, std::string& answer)
                      [&word](auto& iterator) { return iterator.label.starts_with(word); });
 
             }
-    }
+    } else if (std::regex_search(s_iterator,
+                          e_iterator,
+                          match,
+                          std::regex{R"(\b([a-zA-Z][a-zA-Z0-9_]*)(::)([a-zA-Z]*)?)"}))
+    {
+        std::cerr << "Namespace detected" << std::endl;
+        std::string word(match[1].first, match[1].second);
+        auto symbol_it = std::find_if(symbolList.begin(), symbolList.end(), [&word](auto& iterator) { return iterator.label == word;});
+        if(symbol_it != symbolList.end())
+        {
+            word = std::string(match[4].first, match[4].second);
+            std::copy_if(symbol_it->children.begin(),
+                            symbol_it->children.end(),
+                            std::back_inserter(results),
+                            [&word](auto& iterator) { return iterator.label.starts_with(word);});
 
+        }
+    }
+    
     for(const auto& el : results)
     {
         std::cerr << "Result: " << el.label << std::endl;
@@ -524,6 +549,7 @@ void onComletion(const json& j, std::string& answer)
     }
       
     response["result"] = std::move(symbs);
+
    
     std::cerr << "onDocumentSymbol Handler End" << std::endl;
     std::cerr << response << std::endl;
