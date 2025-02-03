@@ -1,5 +1,4 @@
 #include <string>
-
 #include <algorithm>
 #include <map>
 #include <fileapi.h>
@@ -31,9 +30,9 @@ public:
 
 };
 
-struct LanguageData {
-    std::vector<std::string> keywords;
-    std::vector<std::string> constructs;
-    std::vector<std::string> types;
-    std::vector<std::string> custom;
-};
+//~ struct LanguageData {
+    //~ std::vector<std::string> keywords;
+    //~ std::vector<std::string> constructs;
+    //~ std::vector<std::string> types;
+    //~ std::vector<std::string> custom;
+//~ };

@@ -2,7 +2,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <map>
+#include <set>
+#include <unordered_map>
 #include <utility>
 #include "json.hpp"
 #include "client.hpp"  
@@ -16,7 +17,7 @@ void onDidChange(const json& j);
 void onDidOpen(const json& j, std::string& answer);
 void onDidClose(const json& j, std::string& answer);
 void onDocumentSymbol(const json& j, std::string& answer);
-
+void onComletion(const json& j, std::string& answer);
 
 struct SymbolOpt { 
     int name;
@@ -56,15 +57,28 @@ enum class SymbolKind {
 
 //~ Symbol descriptor
 struct Symbol {
-    std::string name;
+    std::string label;
     std::string detail;
     SymbolKind  kind;
+    std::string type;
+    std::string documentation;
+    std::string insertText;
+    int         insertTextFormat;
+
     int         startLine;
     int         endLine;
-
-    //~ List of nested symbols
+ 
     std::vector<Symbol> children; 
 };
+
+//~ struct defSymbol {
+    //~ std::string name;
+    //~ std::string detail;
+    //~ SymbolKind  kind;
+    //~ std::string documentation;
+    //~ std::string insertText;
+    //~ int         insertTextFormat;
+//~ };
 
 void symbolSearch(std::string& text,
                     std::string::const_iterator begin,

@@ -1,55 +1,410 @@
 {
   "languages": {
-    "C": {
-      "keywords": [
-        "auto", "break", "case", "char", "const", "continue", "default", "do",
-        "double", "else", "enum", "extern", "float", "for", "goto", "if",
-        "inline", "int", "long", "register", "restrict", "return", "short",
-        "signed", "sizeof", "static", "struct", "switch", "typedef", "union",
-        "unsigned", "void", "volatile", "while", "_Alignas", "_Alignof",
-        "_Atomic", "_Bool", "_Complex", "_Generic", "_Imaginary", "_Noreturn",
-        "_Static_assert", "_Thread_local"
-      ],
-      "constructs": [
-        "function", "struct", "union", "pointer", "array", "for-loop",
-        "while-loop", "do-while-loop", "if-statement", "switch-statement"
-      ],
-      "built-in types": [
-        "char", "int", "float", "double", "void", "unsigned char",
-        "unsigned int", "unsigned long", "unsigned short", "signed char",
-        "signed int", "signed long", "signed short", "_Bool", "_Complex", "_Imaginary"
-      ]
-    },
-    "C++": {
-      "keywords": [
-        "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel",
-        "atomic_commit", "atomic_noexcept", "auto", "bitand", "bitor",
-        "bool", "break", "case", "catch", "char", "char8_t", "char16_t",
-        "char32_t", "class", "compl", "concept", "const", "consteval",
-        "constexpr", "constinit", "const_cast", "continue", "co_await",
-        "co_return", "co_yield", "decltype", "default", "delete", "do",
-        "double", "dynamic_cast", "else", "enum", "explicit", "export",
-        "extern", "false", "float", "for", "friend", "goto", "if", "inline",
-        "int", "long", "mutable", "namespace", "new", "noexcept", "not",
-        "not_eq", "nullptr", "operator", "or", "or_eq", "private", "protected",
-        "public", "register", "reinterpret_cast", "requires", "return",
-        "short", "signed", "sizeof", "static", "static_assert", "static_cast",
-        "struct", "switch", "template", "this", "thread_local", "throw",
-        "true", "try", "typedef", "typeid", "typename", "union", "unsigned",
-        "using", "virtual", "void", "volatile", "wchar_t", "while", "xor",
-        "xor_eq"
-      ],
-      "constructs": [
-        "class", "namespace", "template", "lambda", "for-loop", "while-loop",
-        "do-while-loop", "if-statement", "switch-statement", "try-catch",
-        "operator-overloading", "inheritance", "polymorphism", "RAII"
-      ],
-      "built-in types": [
-        "bool", "char", "char8_t", "char16_t", "char32_t", "int", "float",
-        "double", "void", "wchar_t", "unsigned char", "unsigned int",
-        "unsigned long", "unsigned short", "signed char", "signed int",
-        "signed long", "signed short", "long long", "unsigned long long"
-      ]
-    }
+    "C": [
+        {
+            "label": "char",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a single character."
+        },
+        {
+            "label": "int",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents an integer number."
+        },
+        {
+            "label": "float",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a single-precision floating-point number."
+        },
+        {
+            "label": "double",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a double-precision floating-point number."
+        },
+        {
+            "label": "void",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents the absence of a value or type."
+        },
+        {
+            "label": "if-else",
+            "kind": 7,
+            "detail": "Control Flow",
+            "documentation": "Defines conditional execution of code blocks based on a boolean expression.",
+            "insertText": "if (${1:condition}) {\n    $0\n} else {\n    \n}",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "switch-case",
+            "kind": 7,
+            "detail": "Control Flow",
+            "documentation": "Executes one of many blocks of code based on a matching constant value.",
+            "insertText": "switch (${1:variable}) {\ncase ${2:constant}:\n    $0\n    break;\ndefault:\n    break;\n}",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "for-loop",
+            "kind": 7,
+            "detail": "Loop",
+            "documentation": "A traditional for-loop for iterating with an index.",
+            "insertText": "for (int ${1:i} = 0; ${1:i} < ${2:N}; ++${1:i}) {\n    $0\n}",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "unsigned char",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents an unsigned single character."
+        },
+        {
+            "label": "unsigned int",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents an unsigned integer number."
+        },
+        {
+            "label": "unsigned long",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents an unsigned long integer."
+        },
+        {
+            "label": "unsigned short",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents an unsigned short integer."
+        },
+        {
+            "label": "signed char",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a signed single character."
+        },
+        {
+            "label": "signed int",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a signed integer number."
+        },
+        {
+            "label": "signed long",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a signed long integer."
+        },
+        {
+            "label": "signed short",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a signed short integer."
+        },
+        {
+            "label": "long long",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a long long integer."
+        },
+        {
+            "label": "unsigned long long",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents an unsigned long long integer."
+        },
+        {
+            "label": "struct",
+            "kind": 7,
+            "detail": "Construct",
+            "documentation": "Defines a user-defined type with members defaulting to public access.\nstruct ${1:StructName} {\n    ${1:StructName}();\n    ~${1:StructName}();\n\n    $0\n};",
+            "insertText": "struct ${1:StructName} {\n    ${1:StructName}();\n    ~${1:StructName}();\n\n    $0\n};",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "struct",
+            "kind": 14,
+            "detail": "Keyword",
+            "documentation": "Defines a user-defined type with members defaulting to public access. \nstruct",
+            "insertText": "struct",
+            "insertTextFormat": 1
+        }
+    ],
+    "C++": [
+         {
+            "label": "bool",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a boolean value (true or false)."
+        },
+        {
+            "label": "char",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a single character."
+        },
+        {
+            "label": "int",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents an integer number."
+        },
+        {
+            "label": "float",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a single-precision floating-point number."
+        },
+        {
+            "label": "double",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a double-precision floating-point number."
+        },
+        {
+            "label": "void",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents the absence of a value or type."
+        },
+        {
+            "label": "wchar_t",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a wide character."
+        },
+        {
+            "label": "unsigned char",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents an unsigned single character."
+        },
+        {
+            "label": "unsigned int",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents an unsigned integer number."
+        },
+        {
+            "label": "unsigned long",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents an unsigned long integer."
+        },
+        {
+            "label": "unsigned short",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents an unsigned short integer."
+        },
+        {
+            "label": "signed char",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a signed single character."
+        },
+        {
+            "label": "signed int",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a signed integer number."
+        },
+        {
+            "label": "signed long",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a signed long integer."
+        },
+        {
+            "label": "signed short",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a signed short integer."
+        },
+        {
+            "label": "long long",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents a long long integer."
+        },
+        {
+            "label": "unsigned long long",
+            "kind": 6,
+            "detail": "Built-in type",
+            "documentation": "Represents an unsigned long long integer."
+        },
+        {
+            "label": "class",
+            "kind": 7,
+            "detail": "Construct",
+            "documentation": "Defines a user-defined data type that encapsulates data and functions."
+        },
+        {
+            "label": "class",
+            "kind": 7,
+            "detail": "Construct",
+            "documentation": "Defines a user-defined type with private and public members, supporting encapsulation, inheritance, and polymorphism.",
+            "insertText": "class ${1:ClassName} {\npublic:\n    ${1:ClassName}();\n    ~${1:ClassName}();\n\nprivate:\n    $0\n};",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "struct",
+            "kind": 7,
+            "detail": "Construct",
+            "documentation": "Defines a user-defined type with members defaulting to public access.\nstruct ${1:StructName} {\n    ${1:StructName}();\n    ~${1:StructName}();\n\n    $0\n};",
+            "insertText": "struct ${1:StructName} {\n    ${1:StructName}();\n    ~${1:StructName}();\n\n    $0\n};",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "struct",
+            "kind": 14,
+            "detail": "Keyword",
+            "documentation": "Defines a user-defined type with members defaulting to public access. \nstruct",
+            "insertText": "struct",
+            "insertTextFormat": 1
+        },
+        {
+            "label": "namespace",
+            "kind": 7,
+            "detail": "Construct",
+            "documentation": "Defines a scope to group identifiers and avoid name conflicts."
+        },
+        {
+            "label": "template",
+            "kind": 14,
+            "detail": "Keyword",
+            "documentation": "Defines a generic programming construct that works with any data type."
+        },
+        {
+            "label": "template",
+            "kind": 7,
+            "detail": "Construct",
+            "documentation": "Template construct: template <typename T> {}",
+            "insertText": "template <typename T> {}",
+            "insertTextFormat": 1
+        },
+        {
+            "label": "lambda",
+            "kind": 7,
+            "detail": "Construct",
+            "documentation": "Defines an anonymous function or closure.",
+            "insertText": "[]() {}",
+            "insertTextFormat": 1
+        },
+        {
+            "label": "if-else",
+            "kind": 7,
+            "detail": "Control Flow",
+            "documentation": "Defines conditional execution of code blocks based on a boolean expression.",
+            "insertText": "if (${1:condition}) {\n    $0\n} else {\n    \n}",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "switch-case",
+            "kind": 7,
+            "detail": "Control Flow",
+            "documentation": "Executes one of many blocks of code based on a matching constant value.",
+            "insertText": "switch (${1:variable}) {\ncase ${2:constant}:\n    $0\n    break;\ndefault:\n    break;\n}",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "for-loop",
+            "kind": 7,
+            "detail": "Loop",
+            "documentation": "A traditional for-loop for iterating with an index.",
+            "insertText": "for (int ${1:i} = 0; ${1:i} < ${2:N}; ++${1:i}) {\n    $0\n}",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "range-for",
+            "kind": 7,
+            "detail": "Loop",
+            "documentation": "A range-based for-loop for iterating over a container.",
+            "insertText": "for (auto& ${1:element} : ${2:container}) {\n    $0\n}",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "iterator-for",
+            "kind": 7,
+            "detail": "Loop",
+            "documentation": "A for-loop using an iterator to traverse a container.",
+            "insertText": "for (auto ${1:it} = ${2:container}.begin(); ${1:it} != ${2:container}.end(); ++${1:it}) {\n    $0\n}",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "while-loop",
+            "kind": 7,
+            "detail": "Loop",
+            "documentation": "Executes a block of code as long as a condition is true.",
+            "insertText": "while (${1:condition}) {\n    $0\n}",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "do-while-loop",
+            "kind": 7,
+            "detail": "Loop",
+            "documentation": "Executes a block of code at least once, then repeats as long as a condition is true.",
+            "insertText": "do {\n    $0\n} while (${1:condition});",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "try-catch",
+            "kind": 7,
+            "detail": "Exception Handling",
+            "documentation": "Defines a block of code to try, and catches exceptions that might be thrown.",
+            "insertText": "try {\n    $0\n} catch (${1:std::exception}& ${2:e}) {\n    // Handle exception\n}",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "operator overloading",
+            "kind": 7,
+            "detail": "Feature",
+            "documentation": "Defines custom behavior for operators when used with objects of a class.",
+            "insertText": "class ${1:ClassName} {\npublic:\n    ${1:ClassName}() = default;\n\n    ${1:ClassName}& operator${2:+}(${3:const ${1:ClassName}& rhs}) {\n        // Implement custom behavior\n        return *this;\n    }\n};",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "typedef",
+            "kind": 14,
+            "detail": "Type Alias",
+            "documentation": "Defines an alias for a type to improve code readability and maintainability.",
+            "insertText": "typedef ${1:ExistingType} ${2:AliasName};",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "using",
+            "kind": 14,
+            "detail": "Type Alias",
+            "documentation": "Defines an alias for a type, providing a more modern and flexible alternative to typedef.",
+            "insertText": "using ${1:AliasName} = ${2:ExistingType};",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "constexpr",
+            "kind": 14,
+            "detail": "Compile-Time Constant",
+            "documentation": "Defines a variable, function, or object that can be evaluated at compile-time.",
+            "insertText": "constexpr ${1:Type} ${2:VariableName} = ${3:Value};",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "consteval",
+            "kind": 14,
+            "detail": "Compile-Time Function",
+            "documentation": "Specifies that a function must produce a compile-time constant when called.",
+            "insertText": "consteval ${1:Type} ${2:FunctionName}(${3:Arguments}) {\n    ${4:// Implementation}\n}",
+            "insertTextFormat": 2
+        },
+        {
+            "label": "constinit",
+            "kind": 14,
+            "detail": "Static Initialization",
+            "documentation": "Ensures that a variable is initialized at compile-time and prevents dynamic initialization.",
+            "insertText": "constinit ${1:Type} ${2:VariableName} = ${3:Value};",
+            "insertTextFormat": 2
+        }
+    ]
   }
 }

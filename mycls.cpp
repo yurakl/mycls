@@ -1,15 +1,14 @@
 #include <iostream>
 #include <Windows.h>
-
+#include <windows.h>
+#include <winbase.h>
 #include "processLSPrequest.hpp"
 
 const int buf_size = 4096;
 
  
 void viaPipe() {
-
-    //std::cout << "viaPipe\n";
-
+ 
     long unsigned read = 0;
     char          from_pipe[buf_size];
     HANDLE        handle_pipe_read  = GetStdHandle(STD_INPUT_HANDLE);
@@ -17,14 +16,11 @@ void viaPipe() {
 
     std::string request;
     std::vector<std::string> answer_queque;
-
-    //std::cout << "Waiting for input (type 'exit' to quit):" << std::endl;
     
     while (ReadFile(handle_pipe_read, from_pipe, buf_size, &read, NULL)) 
     {
         from_pipe[read] = '\0';
-        request += from_pipe;
-        // std::cerr << "Reading from pipe:\n" << "Read: " << from_pipe << std::endl;
+        request += from_pipe; 
 
         if (request.ends_with('}') || request.ends_with("}\r\n") || request.ends_with("}\n"))
         {
@@ -34,8 +30,7 @@ void viaPipe() {
             {
                 for (const auto& answer : answer_queque)
                 {
-                        WriteFile(handle_pipe_write, answer.c_str(), answer.size(), &read, NULL);
-                        // std::cerr << "Written: " << read << "\n" << answer << std::endl;
+                        WriteFile(handle_pipe_write, answer.c_str(), answer.size(), &read, NULL); 
                 }
 
                 memset(from_pipe, 0, buf_size);
