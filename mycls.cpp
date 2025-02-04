@@ -4,9 +4,26 @@
 #include <winbase.h>
 #include "processLSPrequest.hpp"
 
+/**
+ * @brief The size of the buffer used for reading data from the pipe.
+ *
+ * This constant defines the buffer size for a single read operation from the pipe.
+ * The value is set to 4096 bytes.
+ */
 const int buf_size = 4096;
 
- 
+/**
+ * @brief Handles communication via a pipe for HTTP request processing.
+ *
+ * This function is triggered when the server is launched with settings to receive data 
+ * through an anonymous pipe. It reads the buffer from the pipe, then processes the data 
+ * by "decoding" the HTTP requests. After processing, it sends a vector of HTTP responses 
+ * back through the pipe.
+ *
+ * @callgraph
+ * @callergraph
+ * 
+ */
 void viaPipe() {
  
     long unsigned read = 0;

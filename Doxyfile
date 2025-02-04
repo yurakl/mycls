@@ -1,0 +1,6 @@
+INPUT = processLSPrequest.hpp
+OUTPUT_DIRECTORY = docs
+EXTRACT_ALL = YES 
+GENERATE_LATEX = YES
+
+

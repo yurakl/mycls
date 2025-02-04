@@ -2,7 +2,28 @@
 
 
 Project * project = NULL;
+
+/**
+ * @brief A vector containing information about built-in symbols and constructs.
+ *
+ * This vector stores predefined symbols and language constructs 
+ * that are specified in a JSON file and loaded at runtime.
+ */
 std::vector<Symbol> defaultSymbols;
+
+/**
+ * @brief A list of token patterns used for symbol extraction.
+ *
+ * This unordered map associates different symbol types with their corresponding 
+ * regex-based search patterns. Each entry consists of:
+ * - A symbol type (`SymbolKind`).
+ * - The index of the capture group containing the main identifier (e.g., variable or function name).
+ * - The index of the capture group containing the full match with additional details.
+ * - A `std::regex` pattern used for matching the symbol in the text.
+ *
+ * The map is used to identify various C++ constructs such as variables, methods, 
+ * functions, structs, and classes.
+ */
  
 std::unordered_map <SymbolKind, SymbolOpt> SymbolOptions =
 {
@@ -14,7 +35,14 @@ std::unordered_map <SymbolKind, SymbolOpt> SymbolOptions =
     {SymbolKind::Class,    {1, 0, std::regex(R"(\bclass\s+(\w+)\s*)")}}
 };
 
+/**
+ * @brief A vector containing user-defined data types and functions.
+ *
+ * This vector stores custom data types and functions that are defined by the user
+ * and are processed during the program's execution.
+ */
 std::vector <Symbol> symbolList;
+
 
 void processAllRequests(std::string& request, std::vector<std::string>& answer_queque)
 {
@@ -72,6 +100,7 @@ void processAllRequests(std::string& request, std::vector<std::string>& answer_q
     return;
 }
 
+
 int processLSPRequest(const std::string& request, std::string& answer)
 { 
     try {
@@ -122,9 +151,10 @@ int processLSPRequest(const std::string& request, std::string& answer)
     }
     return 0;
 }
- 
+
+
 void handleInitialize(const json& j,  std::string& answer) {
-    std::cerr << "handleInitialize" << std::endl;
+    //~ std::cerr << "handleInitialize" << std::endl;
     std::string rootUri     = j["params"]["rootUri"]; 
     std::string projectId   = std::to_string(std::hash<std::string>{}(rootUri));
 
@@ -136,10 +166,10 @@ void handleInitialize(const json& j,  std::string& answer) {
         return;
     }
 
-    std::cerr << "Read Language Data" << std::endl;
+    //~ std::cerr << "Read Language Data" << std::endl;
 
     json data = json::parse(file);
-    std::cerr << "Read Language Data" << std::endl;
+    //~ std::cerr << "Read Language Data" << std::endl;
     // if (rootUri.end_with(".c"))
     for (const auto& entry : data["languages"]["C++"])
     {
@@ -172,6 +202,7 @@ void handleInitialize(const json& j,  std::string& answer) {
     answer = std::move(response.dump());
 }
 
+
 void onDidOpen(const json& j, std::string& answer)
 {
     
@@ -185,8 +216,9 @@ void onDidOpen(const json& j, std::string& answer)
     
     it->second.text = j["params"]["textDocument"]["text"];
  
-    std::cerr << "File is added to project: " << fname << std::endl;
+    //~ std::cerr << "File is added to project: " << fname << std::endl;
 }
+
 
 void onDidClose(const json& j, std::string& answer)
 {
@@ -203,7 +235,7 @@ void onDidClose(const json& j, std::string& answer)
 
 void onDocumentSymbol(const json& j, std::string& answer) {
 
-    std::cerr << "onDocumentSymbol Handler" << std::endl;
+    //~ std::cerr << "onDocumentSymbol Handler" << std::endl;
     std::string fname = j["params"]["textDocument"]["uri"];
 
     auto it = project->files.find(fname.substr(8));
@@ -216,15 +248,15 @@ void onDocumentSymbol(const json& j, std::string& answer) {
     
     for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
     {
-        std::cerr << "Searching: " << static_cast<int>(sym_it->first) << std::endl;
+        //~ std::cerr << "Searching: " << static_cast<int>(sym_it->first) << std::endl;
         symbolSearch(text, begin, end, sym_it->second.regex, sym_it->first, symbolList);
     }
 
-    std::cerr << "Symbol List start:" << std::endl;
+    //~ std::cerr << "Symbol List start:" << std::endl;
 
     std::for_each(symbolList.begin(), symbolList.end(), [](auto& iterator){ std::cerr << iterator.label << "-" << iterator.type << std::endl; });
     
-    std::cerr << "Symbol List end." << std::endl;
+    //~ std::cerr << "Symbol List end." << std::endl;
 
     
     json response;
@@ -391,6 +423,19 @@ void symbolSearch(std::string& text,
     } 
 }
 
+/**
+ * @brief Extracts a block of code enclosed in curly braces ({}) from the given text.
+ *
+ * This function takes iterators pointing to the beginning and the end of the text,
+ * searches for the matching pair of curly braces, and returns an iterator to the
+ * end of the block (i.e., the closing brace). It throws an exception if no valid
+ * pair of curly braces is found.
+ *
+ * @param begin Iterator pointing to the start of the block (opening brace).
+ * @param end Iterator pointing to the end of the text where the search stops.
+ * @return std::string::const_iterator Iterator pointing to the closing brace of the block.
+ * @throws std::invalid_argument If no matching pair of curly braces is found.
+ */
 std::string::const_iterator extractBlock(const std::string::const_iterator begin, const std::string::const_iterator end)
 {
     
@@ -418,9 +463,10 @@ std::string::const_iterator extractBlock(const std::string::const_iterator begin
     return current + 1;
 }
 
+
 void onComletion(const json& j, std::string& answer)
 {
-    std::cerr << "onComletion Handler" << std::endl;
+    //~ std::cerr << "onComletion Handler" << std::endl;
     std::string fname = j["params"]["textDocument"]["uri"];
     auto it = project->files.find(fname.substr(8));
 
@@ -450,7 +496,7 @@ void onComletion(const json& j, std::string& answer)
         e_iterator++;
     }
     e_iterator++;
-    std::cerr << "1:"<< std::string(s_iterator, e_iterator)  << std::endl;
+    //~ std::cerr << "1:"<< std::string(s_iterator, e_iterator)  << std::endl;
     std::smatch match;
     std::vector<Symbol> results;  
     if (std::regex_search(s_iterator,
@@ -477,17 +523,17 @@ void onComletion(const json& j, std::string& answer)
                           match,
                           std::regex{R"(\b([a-zA-Z][a-zA-Z0-9_]*)(\.|->)([a-zA-Z]*)?)"}))
     {
-            std::cerr << "1..." << match[1] << std::endl;
-            std::cerr << "2..." << match[2] << std::endl;
-            std::cerr << "3..." << match[3] << std::endl;
-            std::cerr << "4..." << match[4] << std::endl;
-            std::cerr << "5..." << match[5] << std::endl;
+            //~ std::cerr << "1..." << match[1] << std::endl;
+            //~ std::cerr << "2..." << match[2] << std::endl;
+            //~ std::cerr << "3..." << match[3] << std::endl;
+            //~ std::cerr << "4..." << match[4] << std::endl;
+            //~ std::cerr << "5..." << match[5] << std::endl;
             std::string word(match[1].first, match[1].second);
             
             auto symbol_it = std::find_if(symbolList.begin(), symbolList.end(), [&word](auto& iterator) { return iterator.label == word;});
             
 
-            std::cerr << "Name: " << symbol_it->label << " Type: " << symbol_it->type << std::endl;
+            //~ std::cerr << "Name: " << symbol_it->label << " Type: " << symbol_it->type << std::endl;
             
             if(symbol_it != symbolList.end())
             {
@@ -505,9 +551,10 @@ void onComletion(const json& j, std::string& answer)
                           match,
                           std::regex{R"(\b([a-zA-Z][a-zA-Z0-9_]*)(::)([a-zA-Z]*)?)"}))
     {
-        std::cerr << "Namespace detected" << std::endl;
+        //~ std::cerr << "Namespace detected" << std::endl;
         std::string word(match[1].first, match[1].second);
         auto symbol_it = std::find_if(symbolList.begin(), symbolList.end(), [&word](auto& iterator) { return iterator.label == word;});
+
         if(symbol_it != symbolList.end())
         {
             word = std::string(match[4].first, match[4].second);
@@ -519,10 +566,10 @@ void onComletion(const json& j, std::string& answer)
         }
     }
     
-    for(const auto& el : results)
-    {
-        std::cerr << "Result: " << el.label << std::endl;
-    }
+    //~ for(const auto& el : results)
+    //~ {
+        //~ std::cerr << "Result: " << el.label << std::endl;
+    //~ }
 
     json response;
     response["jsonrpc"] = "2.0";
@@ -551,9 +598,9 @@ void onComletion(const json& j, std::string& answer)
     response["result"] = std::move(symbs);
 
    
-    std::cerr << "onDocumentSymbol Handler End" << std::endl;
-    std::cerr << response << std::endl;
-    std::cerr << "onDocumentSymbol Handler End" << std::endl;
+    //~ std::cerr << "onDocumentSymbol Handler End" << std::endl;
+    //~ std::cerr << response << std::endl;
+    //~ std::cerr << "onDocumentSymbol Handler End" << std::endl;
     answer = response.dump(); 
     return ;
     
