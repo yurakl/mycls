@@ -26,8 +26,7 @@ std::vector<Symbol> defaultSymbols;
  */
  
 std::unordered_map <SymbolKind, SymbolOpt> SymbolOptions =
-{
-    //~ {SymbolKind::Variable, {2, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)\s*(;|=))")}}
+{ 
     {SymbolKind::Variable, {3, 0, std::regex(R"(\b([*&]*([a-zA-Z_]+)\s*[*&]*\s+)+[*&]*([a-zA-Z_]+)\s*[;|=])")}},
     {SymbolKind::Method,   {4, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)(\s*::\s*)(\w+)\s*\(([^)]*))")}},
     {SymbolKind::Function, {2, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)\s*\(([^)]*)\))")}},
@@ -112,19 +111,19 @@ int processLSPRequest(const std::string& request, std::string& answer)
             std::string method = j["method"];
  
             if (method == "textDocument/didOpen") {
-                std::cerr << "didOpen" << std::endl;
+                //~ std::cerr << "didOpen" << std::endl;
                 onDidOpen(j, answer);
             }
             else if (method == "textDocument/didCLose") {
-                std::cerr << "didClose" << std::endl;
+                //~ std::cerr << "didClose" << std::endl;
                 onDidClose(j, answer);
             }
             else if (method == "textDocument/didChange") {
-                std::cerr << "didChange" << std::endl;
+                //~ std::cerr << "didChange" << std::endl;
                 onDidChange(j);
             }
             else if (method == "textDocument/documentSymbol") {
-                std::cerr << "documentSymbol" << std::endl;
+                //~ std::cerr << "documentSymbol" << std::endl;
                 onDocumentSymbol(j, answer);
             }
             else if (method == "initialize") {
