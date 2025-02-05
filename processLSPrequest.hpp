@@ -10,7 +10,6 @@
 #include <regex>  
 using json = nlohmann::json;
 
-
 /**
  * 
  * @brief Processes all incoming HTTP requests.
@@ -271,3 +270,5 @@ void symbolSearch(std::string& text,
                                     std::vector <struct Symbol>& symbolList);
 
 std::string::const_iterator extractBlock(const std::string::const_iterator begin, const std::string::const_iterator end);
+
+void findLibSymbols(std::string& text);

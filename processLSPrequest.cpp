@@ -3,6 +3,12 @@
 
 Project * project = NULL;
 
+std::string compiler_path;
+
+
+std::string include_path;
+std::vector <Symbol> libSymbols;
+
 /**
  * @brief A vector containing information about built-in symbols and constructs.
  *
@@ -31,7 +37,8 @@ std::unordered_map <SymbolKind, SymbolOpt> SymbolOptions =
     {SymbolKind::Method,   {4, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)(\s*::\s*)(\w+)\s*\(([^)]*))")}},
     {SymbolKind::Function, {2, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)\s*\(([^)]*)\))")}},
     {SymbolKind::Struct,   {1, 0, std::regex(R"(\bstruct\s+(\w+)\s*)")}},
-    {SymbolKind::Class,    {1, 0, std::regex(R"(\bclass\s+(\w+)\s*)")}}
+    {SymbolKind::Class,    {1, 0, std::regex(R"(\bclass\s+(\w+)\s*)")}},
+    {SymbolKind::File,     {2, 0, std::regex(R"(#include\s+("|<)(.+)("|>))")}}
 };
 
 /**
@@ -244,7 +251,8 @@ void onDocumentSymbol(const json& j, std::string& answer) {
     std::string text = it->second.text;
     std::string::const_iterator begin {text.begin()};
     std::string::const_iterator end   {text.end()};
-    
+
+    findLibSymbols(text);
     for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
     {
         //~ std::cerr << "Searching: " << static_cast<int>(sym_it->first) << std::endl;
@@ -253,7 +261,7 @@ void onDocumentSymbol(const json& j, std::string& answer) {
 
     //~ std::cerr << "Symbol List start:" << std::endl;
 
-    std::for_each(symbolList.begin(), symbolList.end(), [](auto& iterator){ std::cerr << iterator.label << "-" << iterator.type << std::endl; });
+    //~ std::for_each(symbolList.begin(), symbolList.end(), [](auto& iterator){ std::cerr << iterator.label << "-" << iterator.type << std::endl; });
     
     //~ std::cerr << "Symbol List end." << std::endl;
 
@@ -312,7 +320,9 @@ void onDocumentSymbol(const json& j, std::string& answer) {
     }
     response["result"] = std::move(symbs);
     
-    answer = response.dump(); 
+    answer = response.dump();
+
+    
     return ;
 }
 
@@ -604,3 +614,38 @@ void onComletion(const json& j, std::string& answer)
     return ;
     
 }   
+
+void findLibSymbols(std::string& text)
+{
+    std::smatch match;
+    std::string::const_iterator begin(text.begin());
+    std::string::const_iterator end(text.end());
+    while(std::regex_search(begin, end, match, std::regex(R"(#include\s+(<)(.+)(>))")))
+    {
+        
+        std::string path = include_path + std::string(match[2].first, match[2].second);
+        std::cerr << "Searching: " << path << std::endl;
+        std::ifstream lib(path, std::ios::in);
+        if (!lib)
+        {
+            std::cerr << "File " << path << "is not found" << std::endl;
+            break;
+        }
+
+        std::ostringstream buffer;
+        buffer << lib.rdbuf();
+        std::string  libtext(buffer.str());
+        
+        for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
+        {
+            //~ std::cerr << "Searching: " << static_cast<int>(sym_it->first) << std::endl;
+            symbolSearch(libtext, libtext.begin(), libtext.end(), sym_it->second.regex, sym_it->first, libSymbols);
+        }
+        begin = match[0].second;
+        
+    }
+
+    std::cerr <<"LibSymbols" << std::endl;
+    std::for_each(libSymbols.begin(), libSymbols.end(), [](auto& iterator){ std::cerr << iterator.label << "-" << iterator.type << std::endl; });
+        
+}

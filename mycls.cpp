@@ -4,6 +4,9 @@
 #include <winbase.h>
 #include "processLSPrequest.hpp"
 
+
+extern std::string compiler_path;
+extern std::string include_path;
 /**
  * @brief The size of the buffer used for reading data from the pipe.
  *
@@ -74,26 +77,47 @@ int main(int argc, char* argv[]) {
 
     std::string mode = argv[1];
 
-    if(mode.find("-", 0) == 0)
-    {
-        std::cerr  << "Do not use '-' or '--' before an option" << std::endl;
-        return -1;
-    }
+    //~ if(mode.find("-", 0) == 0)
+    //~ {
+        //~ std::cerr  << "Do not use '-' or '--' before an option" << std::endl;
+        //~ return -1;
+    //~ }
 
-    if (mode.find("check", 0) != std::string::npos) {
-        std::string filename;
-        filename = mode.substr(6); 
+    //~ if (mode.find("check", 0) != std::string::npos) {
+        //~ std::string filename;
+        //~ filename = mode.substr(6); 
         
-    }   else if (mode == "ap") {  
-        std::cerr << "Anonymous pipe mode" << std::endl; 
-        viaPipe();
+    //~ }   else if (mode == "ap") {  
+        //~ std::cerr << "Anonymous pipe mode" << std::endl; 
+        //~ viaPipe();
 
-    } else {
+    //~ } else {
     
-        std::cerr << "Error: Unknown mode " << mode << "\n";
-        return 1;
+        //~ std::cerr << "Error: Unknown mode " << mode << "\n";
+        //~ return 1;
     
+    //~ }
+    std::smatch match;
+    for (int i = 1; i < argc; i++)
+    {
+        std::cerr << i << ". " << argv[i] << std::endl;
+        std::string argument{argv[i]};
+        if (regex_search(argument, match, std::regex{R"(\-I(.+))"}))
+        {
+            include_path = match[1];
+        }
+        
     }
-
+    for (int i = 1; i < argc; i++)
+    {
+        std::cerr << i << ". " << argv[i] << std::endl; 
+        std::string argument{argv[i]};
+ 
+        if (regex_search(argument, match, std::regex(R"(\-ap)")))
+        {
+            viaPipe();
+        }
+    }
+    std::cerr << "exit" << std::endl;
     return 0;
 }
