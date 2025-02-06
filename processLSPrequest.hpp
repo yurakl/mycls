@@ -271,3 +271,6 @@ void symbolSearch(std::string& text,
                                     std::vector <struct Symbol>& symbolList);
 
 std::string::const_iterator extractBlock(const std::string::const_iterator begin, const std::string::const_iterator end);
+
+
+void ignoreComment(std::string& text);
