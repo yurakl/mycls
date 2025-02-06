@@ -247,12 +247,16 @@ void onDocumentSymbol(const json& j, std::string& answer) {
     auto it = project->files.find(fname.substr(8));
     
     symbolList.clear();
-
+    
     std::string text = it->second.text;
     std::string::const_iterator begin {text.begin()};
     std::string::const_iterator end   {text.end()};
 
+<<<<<<< HEAD
     findLibSymbols(text);
+=======
+    ignoreComment(text);
+>>>>>>> ignore_comment
     for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
     {
         //~ std::cerr << "Searching: " << static_cast<int>(sym_it->first) << std::endl;
@@ -612,9 +616,9 @@ void onComletion(const json& j, std::string& answer)
     //~ std::cerr << "onDocumentSymbol Handler End" << std::endl;
     answer = response.dump(); 
     return ;
-    
 }   
 
+<<<<<<< HEAD
 void findLibSymbols(std::string& text)
 {
     std::smatch match;
@@ -648,4 +652,52 @@ void findLibSymbols(std::string& text)
     std::cerr <<"LibSymbols" << std::endl;
     std::for_each(libSymbols.begin(), libSymbols.end(), [](auto& iterator){ std::cerr << iterator.label << "-" << iterator.type << std::endl; });
         
+=======
+void ignoreComment(std::string& text)
+{
+
+    std::cerr << "ignoreComment" << std::endl;
+    std::smatch match;
+    std::string::const_iterator begin   = text.begin();
+    std::string::const_iterator end     = text.end();
+    size_t start = 0;
+    while(std::regex_search(begin, end, match, std::regex(R"(\/\*((.*?)(\n*))*\*\/)")))
+    {
+        std::cerr << "Match: "      << std::string(match[0].first, match[0].second) << std::endl; 
+        std::cerr << "Position: "   << match.position(0) << std::endl; 
+        std::cerr << "Length: "     << match.length(0) << std::endl;
+        std::cerr << "Text: "       << std::string(begin + match.position(0), begin + match.position(0) + match.length(0)) << std::endl;
+        std::string::iterator startBlock = text.begin() + start + match.position(0);
+        std::string::iterator   endBlock = text.begin() + start + match.position(0) + match.length(0);
+        
+        for_each(   startBlock,
+                    endBlock,
+                    [](char& iterator){iterator = ' ';} );
+        begin = match[0].second;
+        start = begin - text.begin();
+    }
+    
+    begin = text.begin();
+    start = 0;
+    while(std::regex_search(begin, end, match, std::regex(R"(\/\/(.+)\n)")))
+    {
+        std::cerr << "Match: "      << std::string(match[0].first, match[0].second) << std::endl; 
+        std::cerr << "Position: "   << match.position(0) << std::endl; 
+        std::cerr << "Length: "     << match.length(0) << std::endl;
+        std::cerr << "Text: "       << std::string(begin + match.position(0), begin + match.position(0) + match.length(0) - 1) << std::endl; 
+        std::string::iterator startBlock = text.begin() + start + match.position(0);
+        std::string::iterator   endBlock = text.begin() + start + match.position(0) + match.length(0) - 1;
+        
+        for_each(   startBlock,
+                    endBlock,
+                    [](char& iterator){iterator = ' ';} );
+        begin = match[0].second;
+        start = begin - text.begin();
+    }
+    
+    std::cerr << "----------Text------------" << std::endl;
+    std::cerr << text << std::endl;
+    std::cerr << "----------Text------------" << std::endl;
+    
+>>>>>>> ignore_comment
 }
