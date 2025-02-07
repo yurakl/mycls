@@ -1,4 +1,4 @@
-INPUT = processLSPrequest.hpp
+INPUT = scr/processLSPrequest.hpp scr/symbolOptions.hpp scr/mycls.cpp scr/textProcessor.hpp
 OUTPUT_DIRECTORY = docs
 EXTRACT_ALL = YES 
 GENERATE_LATEX = YES
