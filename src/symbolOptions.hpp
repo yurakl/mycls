@@ -2,7 +2,7 @@
 #define SYMBOL_OPTIONS_H
 
 #include <unordered_map>
-
+#include <regex>
 /**
  * @brief Structure containing information for symbol search.
  *
@@ -125,11 +125,7 @@ struct Symbol {
      */
     std::vector<Symbol> children;
 };
-
-
-
  
-inline std::vector <Symbol> libSymbols;
 
 /**
  * @brief A vector containing information about built-in symbols and constructs.
@@ -139,13 +135,6 @@ inline std::vector <Symbol> libSymbols;
  */
 inline std::vector<Symbol> defaultSymbols;
 
-/**
- * @brief A vector containing user-defined data types and functions.
- *
- * This vector stores custom data types and functions that are defined by the user
- * and are processed during the program's execution.
- */
-inline std::vector <Symbol> symbolList;
 
 
 /**

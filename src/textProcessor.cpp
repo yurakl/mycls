@@ -2,7 +2,7 @@
 
 extern std::string compiler_path;
 extern std::string include_path;
-
+extern Project * project;
 std::string::const_iterator extractBlock(const std::string::const_iterator begin, const std::string::const_iterator end)
 {
     
@@ -79,50 +79,6 @@ void ignoreComment(std::string& text)
 
     
 }
-
-
-void findLibSymbols(std::string& text)
-{
-    std::smatch match;
-    std::string::const_iterator begin(text.begin());
-    std::string::const_iterator end(text.end());
-    while(std::regex_search(begin, end, match, std::regex(R"(#include\s+(<)(.+)(>))")))
-    {
-        
-        std::string path = include_path + std::string(match[2].first, match[2].second);
-        std::cerr << "Searching: " << path << std::endl;
-        std::ifstream lib(path, std::ios::in);
-        if (!lib)
-        {
-            std::cerr << "File " << path << "is not found" << std::endl;
-            break;
-        }
-
-        std::ostringstream buffer;
-        buffer << lib.rdbuf();
-        std::string  libtext(buffer.str());
-
-        ignoreComment(libtext);
-
-        for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
-        {
-            symbolSearch(libtext, libtext.begin(), libtext.end(), sym_it->second.regex, sym_it->first, libSymbols);
-        }
-        begin = match[0].second;
-        
-    }
-
-    //~ std::cerr <<"LibSymbols" << std::endl;
-    //~ std::for_each(libSymbols.begin(), libSymbols.end(), [](auto& iterator){ std::cerr << iterator.label << ":" << static_cast<int>(iterator.kind) << std::endl;
-                                                                            //~ if (!iterator.children.empty())
-                                                                            //~ {
-                                                                                //~ std::vector<Symbol>::iterator child = iterator.children.begin();
-                                                                                //~ std::cerr << "\tHas children: " << child->label << std::endl;
-                                                                            //~ }
-                                                                            //~ });
-}
-
-
 
 void symbolSearch(std::string& text,
                     std::string::const_iterator begin,
@@ -217,4 +173,70 @@ void symbolSearch(std::string& text,
                 //~ std::cerr << "----------Text------------" << std::endl;
                 symbolList.push_back(temprorary); 
     } 
+}
+
+
+void processFile(ProjectFile& the_file)
+{
+    if (the_file.didChange)
+    {
+        the_file.symbolList.clear();
+        std::string text = the_file.text;
+        std::string::const_iterator begin {text.begin()};
+        std::string::const_iterator end   {text.end()};
+    
+        ignoreComment(text);
+ 
+        for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
+        { 
+            symbolSearch(text, begin, end, sym_it->second.regex, sym_it->first, the_file.symbolList);
+        }
+
+
+
+        for (const auto& symbol : the_file.symbolList)
+        {
+            if(symbol.kind == SymbolKind::File)
+            {
+                auto temprorary = project->files.find(symbol.label);
+                if(temprorary == project->files.end())
+                {
+                    project->files.emplace(symbol.label, ProjectFile{symbol.label, "text"});
+                    auto lib_it = project->files.find(symbol.label);
+
+                    ProjectFile& new_item = lib_it->second;
+
+                    new_item.path = include_path + the_file.path;
+                    std::ifstream lib(new_item.path, std::ios::in);
+                    if (!lib)
+                    {
+                        std::cerr << "File " << new_item.path << "is not found" << std::endl;
+                        break;
+                    }
+
+                    std::ostringstream buffer;
+                    buffer << lib.rdbuf();
+                    new_item.text = buffer.str();
+                    processFile(new_item);
+                    the_file.includedFiles.push_back(&new_item);
+                }
+                else if (temprorary != project->files.end() && temprorary->second.didChange == 1)
+                {
+                    ProjectFile& new_item = temprorary->second;
+                    processFile(new_item);
+                }
+            }
+
+        }
+
+        std::cerr << the_file.path << ":" << std::endl;
+
+        std::for_each(the_file.symbolList.begin(), the_file.symbolList.end(), [](auto& iterator){ std::cerr << iterator.label << "-" << iterator.type << std::endl; });
+        
+ 
+
+    }
+    the_file.didChange = 0;
+
+    
 }

@@ -3,7 +3,7 @@
 #include <string>
 #include <regex>
 #include "symbolOptions.hpp"
-
+#include "client.hpp" 
 
 /**
  * @brief Extracts a block of code enclosed in curly braces ({}) from the given text.
@@ -55,3 +55,6 @@ void symbolSearch(std::string& text,
                             std::regex& regex,
                                 SymbolKind kind,
                                     std::vector <struct Symbol>& symbolList);
+
+
+void processFile(ProjectFile& the_file);
