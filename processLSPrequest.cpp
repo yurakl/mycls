@@ -5,8 +5,8 @@ Project * project = NULL;
 
 std::string compiler_path;
 
-
 std::string include_path;
+
 std::vector <Symbol> libSymbols;
 
 /**
@@ -16,6 +16,15 @@ std::vector <Symbol> libSymbols;
  * that are specified in a JSON file and loaded at runtime.
  */
 std::vector<Symbol> defaultSymbols;
+
+/**
+ * @brief A vector containing user-defined data types and functions.
+ *
+ * This vector stores custom data types and functions that are defined by the user
+ * and are processed during the program's execution.
+ */
+std::vector <Symbol> symbolList;
+
 
 /**
  * @brief A list of token patterns used for symbol extraction.
@@ -33,21 +42,14 @@ std::vector<Symbol> defaultSymbols;
  
 std::unordered_map <SymbolKind, SymbolOpt> SymbolOptions =
 { 
-    {SymbolKind::Variable, {3, 0, std::regex(R"(\b([*&]*([a-zA-Z_]+)\s*[*&]*\s+)+[*&]*([a-zA-Z_]+)\s*[;|=])")}},
-    {SymbolKind::Method,   {4, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)(\s*::\s*)(\w+)\s*\(([^)]*))")}},
-    {SymbolKind::Function, {2, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)\s*\(([^)]*)\))")}},
-    {SymbolKind::Struct,   {1, 0, std::regex(R"(\bstruct\s+(\w+)\s*)")}},
-    {SymbolKind::Class,    {1, 0, std::regex(R"(\bclass\s+(\w+)\s*)")}},
-    {SymbolKind::File,     {2, 0, std::regex(R"(#include\s+("|<)(.+)("|>))")}}
+    {SymbolKind::Variable,      {3, 0, std::regex(R"(\b([*&]*([a-zA-Z_]+)\s*[*&]*\s+)+[*&]*([a-zA-Z_]+)\s*[;|=])")}},
+    {SymbolKind::Method,        {4, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)(\s*::\s*)(\w+)\s*\(([^)]*))")}},
+    {SymbolKind::Function,      {2, 0, std::regex(R"((\w[\w\s*&]+)\s+(\w+)\s*\(([^)]*)\))")}},
+    {SymbolKind::Struct,        {1, 0, std::regex(R"(\bstruct\s+(\w+)\s*)")}},
+    {SymbolKind::Class,         {1, 0, std::regex(R"(\bclass\s+(\w+)\s*)")}},
+    {SymbolKind::Namespace,     {1, 0, std::regex(R"(\bnamespace\s+(\w+)\s*)")}},
+    {SymbolKind::File,          {2, 0, std::regex(R"(#include\s+("|<)(.+)("|>))")}}
 };
-
-/**
- * @brief A vector containing user-defined data types and functions.
- *
- * This vector stores custom data types and functions that are defined by the user
- * and are processed during the program's execution.
- */
-std::vector <Symbol> symbolList;
 
 
 void processAllRequests(std::string& request, std::vector<std::string>& answer_queque)
@@ -380,7 +382,7 @@ void symbolSearch(std::string& text,
                                         .endLine    = eline};
                 
                 
-                if(kind == SymbolKind::Class ||  kind == SymbolKind::Function || kind == SymbolKind::Struct)
+                if(kind == SymbolKind::Namespace || kind == SymbolKind::Class ||  kind == SymbolKind::Function || kind == SymbolKind::Struct)
                 {
                     try
                     {
@@ -563,10 +565,15 @@ void onComletion(const json& j, std::string& answer)
                           match,
                           std::regex{R"(\b([a-zA-Z][a-zA-Z0-9_]*)(::)([a-zA-Z]*)?)"}))
     {
-        //~ std::cerr << "Namespace detected" << std::endl;
+        std::cerr << "Namespace detected" << std::endl;
         std::string word(match[1].first, match[1].second);
         auto symbol_it = std::find_if(symbolList.begin(), symbolList.end(), [&word](auto& iterator) { return iterator.label == word;});
 
+        if(symbol_it == symbolList.end())
+        {
+            symbol_it = std::find_if(libSymbols.begin(), libSymbols.end(), [&word](auto& iterator) { return iterator.label == word;});
+        }
+        
         if(symbol_it != symbolList.end())
         {
             word = std::string(match[4].first, match[4].second);
@@ -642,15 +649,20 @@ void findLibSymbols(std::string& text)
 
         for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
         {
-            //~ std::cerr << "Searching: " << static_cast<int>(sym_it->first) << std::endl;
             symbolSearch(libtext, libtext.begin(), libtext.end(), sym_it->second.regex, sym_it->first, libSymbols);
         }
         begin = match[0].second;
         
     }
 
-    std::cerr <<"LibSymbols" << std::endl;
-    std::for_each(libSymbols.begin(), libSymbols.end(), [](auto& iterator){ std::cerr << iterator.label << "-" << iterator.type << std::endl; });
+    //~ std::cerr <<"LibSymbols" << std::endl;
+    //~ std::for_each(libSymbols.begin(), libSymbols.end(), [](auto& iterator){ std::cerr << iterator.label << ":" << static_cast<int>(iterator.kind) << std::endl;
+                                                                            //~ if (!iterator.children.empty())
+                                                                            //~ {
+                                                                                //~ std::vector<Symbol>::iterator child = iterator.children.begin();
+                                                                                //~ std::cerr << "\tHas children: " << child->label << std::endl;
+                                                                            //~ }
+                                                                            //~ });
 }
 
 void ignoreComment(std::string& text)
@@ -663,10 +675,10 @@ void ignoreComment(std::string& text)
     size_t start = 0;
     while(std::regex_search(begin, end, match, std::regex(R"(\/\*((.*?)(\n*))*\*\/)")))
     {
-        std::cerr << "Match: "      << std::string(match[0].first, match[0].second) << std::endl; 
-        std::cerr << "Position: "   << match.position(0) << std::endl; 
-        std::cerr << "Length: "     << match.length(0) << std::endl;
-        std::cerr << "Text: "       << std::string(begin + match.position(0), begin + match.position(0) + match.length(0)) << std::endl;
+        //~ std::cerr << "Match: "      << std::string(match[0].first, match[0].second) << std::endl; 
+        //~ std::cerr << "Position: "   << match.position(0) << std::endl; 
+        //~ std::cerr << "Length: "     << match.length(0) << std::endl;
+        //~ std::cerr << "Text: "       << std::string(begin + match.position(0), begin + match.position(0) + match.length(0)) << std::endl;
         std::string::iterator startBlock = text.begin() + start + match.position(0);
         std::string::iterator   endBlock = text.begin() + start + match.position(0) + match.length(0);
         
@@ -681,10 +693,10 @@ void ignoreComment(std::string& text)
     start = 0;
     while(std::regex_search(begin, end, match, std::regex(R"(\/\/(.+)\n)")))
     {
-        std::cerr << "Match: "      << std::string(match[0].first, match[0].second) << std::endl; 
-        std::cerr << "Position: "   << match.position(0) << std::endl; 
-        std::cerr << "Length: "     << match.length(0) << std::endl;
-        std::cerr << "Text: "       << std::string(begin + match.position(0), begin + match.position(0) + match.length(0) - 1) << std::endl; 
+        //~ std::cerr << "Match: "      << std::string(match[0].first, match[0].second) << std::endl; 
+        //~ std::cerr << "Position: "   << match.position(0) << std::endl; 
+        //~ std::cerr << "Length: "     << match.length(0) << std::endl;
+        //~ std::cerr << "Text: "       << std::string(begin + match.position(0), begin + match.position(0) + match.length(0) - 1) << std::endl; 
         std::string::iterator startBlock = text.begin() + start + match.position(0);
         std::string::iterator   endBlock = text.begin() + start + match.position(0) + match.length(0) - 1;
         
@@ -695,9 +707,9 @@ void ignoreComment(std::string& text)
         start = begin - text.begin();
     }
     
-    std::cerr << "----------Text------------" << std::endl;
-    std::cerr << text << std::endl;
-    std::cerr << "----------Text------------" << std::endl;
+    //~ std::cerr << "----------Text------------" << std::endl;
+    //~ std::cerr << text << std::endl;
+    //~ std::cerr << "----------Text------------" << std::endl;
 
     
 }
