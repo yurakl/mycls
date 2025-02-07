@@ -159,7 +159,8 @@ inline std::unordered_map <SymbolKind, SymbolOpt> SymbolOptions =
     {SymbolKind::Struct,        {1, 0, std::regex(R"(\bstruct\s+(\w+)\s*)")}},
     {SymbolKind::Class,         {1, 0, std::regex(R"(\bclass\s+(\w+)\s*)")}},
     {SymbolKind::Namespace,     {1, 0, std::regex(R"(\bnamespace\s+(\w+)\s*)")}},
-    {SymbolKind::File,          {2, 0, std::regex(R"(#include\s+("|<)(.+)("|>))")}}
+    {SymbolKind::File,          {2, 0, std::regex(R"(#include\s+(")(.+)("))")}},
+    {SymbolKind::Package,       {2, 0, std::regex(R"(#include\s+(<)(.+)(>))")}}
 };
 
 #endif 

@@ -186,18 +186,26 @@ void processFile(ProjectFile& the_file)
         std::string::const_iterator end   {text.end()};
     
         ignoreComment(text);
- 
+        
         for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
         { 
             symbolSearch(text, begin, end, sym_it->second.regex, sym_it->first, the_file.symbolList);
         }
 
+        std::cerr << "1. " << the_file.path << ":" << std::endl;
 
+        std::for_each(the_file.symbolList.begin(), the_file.symbolList.end(), [](auto& iterator){ std::cerr << iterator.label << "-" << static_cast<int>(iterator.kind) << std::endl; });
 
-        for (const auto& symbol : the_file.symbolList)
+    }
+    the_file.didChange = 0;    
+}
+
+void processIncluded(ProjectFile& the_file)
+{
+    for (auto& symbol : the_file.symbolList)
+    {
+        if(symbol.kind == SymbolKind::File || symbol.kind == SymbolKind::Package)
         {
-            if(symbol.kind == SymbolKind::File)
-            {
                 auto temprorary = project->files.find(symbol.label);
                 if(temprorary == project->files.end())
                 {
@@ -206,7 +214,13 @@ void processFile(ProjectFile& the_file)
 
                     ProjectFile& new_item = lib_it->second;
 
-                    new_item.path = include_path + the_file.path;
+                    if(symbol.kind == SymbolKind::Package)
+                    {
+                        new_item.path = include_path + symbol.label;
+                    } else {
+                        new_item.path = symbol.label;
+                    }
+                    
                     std::ifstream lib(new_item.path, std::ios::in);
                     if (!lib)
                     {
@@ -225,18 +239,6 @@ void processFile(ProjectFile& the_file)
                     ProjectFile& new_item = temprorary->second;
                     processFile(new_item);
                 }
-            }
-
         }
-
-        std::cerr << the_file.path << ":" << std::endl;
-
-        std::for_each(the_file.symbolList.begin(), the_file.symbolList.end(), [](auto& iterator){ std::cerr << iterator.label << "-" << iterator.type << std::endl; });
-        
- 
-
     }
-    the_file.didChange = 0;
-
-    
 }

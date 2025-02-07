@@ -203,6 +203,7 @@ void onDocumentSymbol(const json& j, std::string& answer) {
     auto it = project->files.find(fname.substr(8));
     
     processFile(it->second);
+    processIncluded(it->second);
      
     json response;
     response["jsonrpc"] = "2.0";
@@ -309,84 +310,91 @@ void onComletion(const json& j, std::string& answer)
         e_iterator++;
     }
     e_iterator++;
-    //~ std::cerr << "1:"<< std::string(s_iterator, e_iterator)  << std::endl;
+    
     std::smatch match;
-    std::vector<Symbol> results;  
-    if (std::regex_search(s_iterator,
-                          e_iterator,
-                          match,
-                          std::regex{R"(\s+([a-zA-Z_]+)\s+)"}))
-    {       
-                          
-        std::string word(match[1].first, match[1].second);
-        
-        //~ std::cerr << "2:"<< match[0] << std::endl;
-        
-        std::copy_if(defaultSymbols.begin(),
-                     defaultSymbols.end(),
-                     std::back_inserter(results),
-                     [&word](auto& iterator) { return iterator.label.starts_with(word); });
-        std::copy_if(it->second.symbolList.begin(),
-                     it->second.symbolList.end(),
-                     std::back_inserter(results),
-                     [&word](auto& iterator) { return iterator.label.starts_with(word); });
- 
-    } else if (std::regex_search(s_iterator,
-                          e_iterator,
-                          match,
-                          std::regex{R"(\b([a-zA-Z][a-zA-Z0-9_]*)(\.|->)([a-zA-Z]*)?)"}))
-    {
+    std::vector<Symbol> results;
 
+    auto search = [&](std::vector<Symbol>& list)
+    {
+        if (std::regex_search(s_iterator,
+                              e_iterator,
+                              match,
+                              std::regex{R"(\s+([a-zA-Z_]+)\s+)"}))
+        {       
+                              
+            std::string word(match[1].first, match[1].second); 
+            std::copy_if(list.begin(),
+                         list.end(),
+                         std::back_inserter(results),
+                         [&word](auto& iterator) { return iterator.label.starts_with(word); });
+
+     
+        } else if (std::regex_search(   s_iterator,
+                                        e_iterator,
+                                        match,
+                                        std::regex{R"(\b([a-zA-Z][a-zA-Z0-9_]*)(\.|->)([a-zA-Z]*)?)"}))
+        {
+
+                std::string word(match[1].first, match[1].second);
+                auto symbol_it = std::find_if(  list.begin(),
+                                                list.end(),
+                                                [&word](auto& iterator) { return iterator.label == word;}   );
+                 
+                
+                if(symbol_it != it->second.symbolList.end())
+                {
+                    word = symbol_it->type;
+                    auto symbol_it = std::find_if(  list.begin(),
+                                                    list.end(),
+                                                    [&word](auto& iterator) { return iterator.label == word;}   );
+
+                    word = std::string(match[4].first, match[4].second);
+
+                    std::copy_if(   symbol_it->children.begin(),
+                                    symbol_it->children.end(),
+                                    std::back_inserter(results),
+                                    [&word](auto& iterator) { return iterator.label.starts_with(word); });
+
+                }
+        }
+        else if (std::regex_search(     s_iterator,
+                                        e_iterator,
+                                        match,
+                                        std::regex{R"(\b([a-zA-Z][a-zA-Z0-9_]*)(::)([a-zA-Z]*)?)"}  ))
+        {
+            std::cerr << "Namespace detected" << std::endl;
             std::string word(match[1].first, match[1].second);
             
-            auto symbol_it = std::find_if(  it->second.symbolList.begin(),
-                                            it->second.symbolList.end(),
-                                            [&word](auto& iterator) { return iterator.label == word;}   );
+            auto symbol_it = std::find_if(list.begin(), list.end(), [&word](auto& iterator) { return iterator.label == word;});
             
-
-            //~ std::cerr << "Name: " << symbol_it->label << " Type: " << symbol_it->type << std::endl;
-            
-            if(symbol_it != it->second.symbolList.end())
+            if(symbol_it != list.end())
             {
-                word = symbol_it->type;
-                auto symbol_it = std::find_if(  it->second.symbolList.begin(),
-                                                it->second.symbolList.end(),
-                                                [&word](auto& iterator) { return iterator.label == word;}   );
-
                 word = std::string(match[4].first, match[4].second);
-
                 std::copy_if(   symbol_it->children.begin(),
                                 symbol_it->children.end(),
                                 std::back_inserter(results),
-                                [&word](auto& iterator) { return iterator.label.starts_with(word); });
+                                [&word](auto& iterator) { return iterator.label.starts_with(word);});
 
             }
-    }
-    else if (std::regex_search(   s_iterator,
-                                    e_iterator,
-                                    match,
-                                    std::regex{R"(\b([a-zA-Z][a-zA-Z0-9_]*)(::)([a-zA-Z]*)?)"}  ))
-    {
-        std::cerr << "Namespace detected" << std::endl;
-        std::string word(match[1].first, match[1].second);
-        
-        auto symbol_it = std::find_if(it->second.symbolList.begin(), it->second.symbolList.end(), [&word](auto& iterator) { return iterator.label == word;});
-        
-        if(symbol_it != it->second.symbolList.end())
-        {
-            word = std::string(match[4].first, match[4].second);
-            std::copy_if(symbol_it->children.begin(),
-                            symbol_it->children.end(),
-                            std::back_inserter(results),
-                            [&word](auto& iterator) { return iterator.label.starts_with(word);});
-
         }
+    };
+
+
+    search(defaultSymbols);
+    search(it->second.symbolList);
+
+    for (auto& included : it->second.includedFiles)
+    {
+        search(included->symbolList);
     }
     
-    //~ for(const auto& el : results)
-    //~ {
-        //~ std::cerr << "Result: " << el.label << std::endl;
-    //~ }
+    
+    
+    std::cerr << "Completion Results:" << std::endl;
+    for(const auto& el : results)
+    {
+        std::cerr << "Result: " << el.label << std::endl;
+    }
 
     json response;
     response["jsonrpc"] = "2.0";
@@ -413,11 +421,6 @@ void onComletion(const json& j, std::string& answer)
     }
       
     response["result"] = std::move(symbs);
-
-   
-    //~ std::cerr << "onDocumentSymbol Handler End" << std::endl;
-    //~ std::cerr << response << std::endl;
-    //~ std::cerr << "onDocumentSymbol Handler End" << std::endl;
     answer = response.dump(); 
     return ;
 }   

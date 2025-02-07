@@ -58,3 +58,4 @@ void symbolSearch(std::string& text,
 
 
 void processFile(ProjectFile& the_file);
+void processIncluded(ProjectFile& the_file);
