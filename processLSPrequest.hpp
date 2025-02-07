@@ -272,3 +272,4 @@ void symbolSearch(std::string& text,
 std::string::const_iterator extractBlock(const std::string::const_iterator begin, const std::string::const_iterator end);
 
 void findLibSymbols(std::string& text);
+void ignoreComment(std::string& text);

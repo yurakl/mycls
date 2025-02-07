@@ -251,12 +251,11 @@ void onDocumentSymbol(const json& j, std::string& answer) {
     std::string text = it->second.text;
     std::string::const_iterator begin {text.begin()};
     std::string::const_iterator end   {text.end()};
+ 
 
-<<<<<<< HEAD
-    findLibSymbols(text);
-=======
     ignoreComment(text);
->>>>>>> ignore_comment
+    findLibSymbols(text); 
+     
     for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
     {
         //~ std::cerr << "Searching: " << static_cast<int>(sym_it->first) << std::endl;
@@ -617,8 +616,7 @@ void onComletion(const json& j, std::string& answer)
     answer = response.dump(); 
     return ;
 }   
-
-<<<<<<< HEAD
+ 
 void findLibSymbols(std::string& text)
 {
     std::smatch match;
@@ -639,7 +637,9 @@ void findLibSymbols(std::string& text)
         std::ostringstream buffer;
         buffer << lib.rdbuf();
         std::string  libtext(buffer.str());
-        
+
+        ignoreComment(libtext);
+
         for (auto sym_it = SymbolOptions.begin(); sym_it != SymbolOptions.end(); sym_it++)
         {
             //~ std::cerr << "Searching: " << static_cast<int>(sym_it->first) << std::endl;
@@ -651,8 +651,8 @@ void findLibSymbols(std::string& text)
 
     std::cerr <<"LibSymbols" << std::endl;
     std::for_each(libSymbols.begin(), libSymbols.end(), [](auto& iterator){ std::cerr << iterator.label << "-" << iterator.type << std::endl; });
-        
-=======
+}
+
 void ignoreComment(std::string& text)
 {
 
@@ -698,6 +698,6 @@ void ignoreComment(std::string& text)
     std::cerr << "----------Text------------" << std::endl;
     std::cerr << text << std::endl;
     std::cerr << "----------Text------------" << std::endl;
+
     
->>>>>>> ignore_comment
 }
